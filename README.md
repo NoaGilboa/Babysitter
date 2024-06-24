@@ -50,13 +50,21 @@ The Babysitter app is designed to connect parents with babysitters. This app all
 
 ## Mockups
 Here are some screenshots and mockups of the application:
+
 ![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/969b8adc-14f0-4297-97ac-7a349e471de9) 
+
 ![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/82dd3b72-0ac4-4e11-b5d7-d271c802b7b4)
+
 ![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/982dccb1-80cd-4d9b-a4d8-f4d51f4e7b38)
+
 ![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/041b4a44-907e-4161-b9eb-28a649c4b0ee)
+
 ![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/5d9a7716-7e95-4b5d-ba12-e57a120bb897)
+
 ![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/6dcd9137-351e-49a2-9f85-527b444ec1b9)
+
 ![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/eef154db-530c-4977-ae57-e68ba91c097a)
+
 
 ## Video Demonstration
 Watch a video demonstration of the Babysitter app: 
