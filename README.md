@@ -47,23 +47,23 @@ The Babysitter app is designed to connect parents with babysitters. This app all
 - **Scheduling and Calendar Integration**: Add a feature to schedule and manage appointments directly through the app, including integration with external calendars.
 - **Ratings and Reviews**: Users can rate and review babysitters after availing their services.
 - **Payment Integration**: Integrate a payment gateway to handle transactions directly through the app, providing a seamless experience for booking and payments.
-
 ## Mockups
 Here are some screenshots and mockups of the application:
 
-![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/969b8adc-14f0-4297-97ac-7a349e471de9) 
+<img src="https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/969b8adc-14f0-4297-97ac-7a349e471de9" width="300">
 
-![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/82dd3b72-0ac4-4e11-b5d7-d271c802b7b4)
+<img src="https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/82dd3b72-0ac4-4e11-b5d7-d271c802b7b4" width="300">
 
-![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/982dccb1-80cd-4d9b-a4d8-f4d51f4e7b38)
+<img src="https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/982dccb1-80cd-4d9b-a4d8-f4d51f4e7b38" width="300">
 
-![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/041b4a44-907e-4161-b9eb-28a649c4b0ee)
+<img src="https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/041b4a44-907e-4161-b9eb-28a649c4b0ee" width="300">
 
-![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/5d9a7716-7e95-4b5d-ba12-e57a120bb897)
+<img src="https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/5d9a7716-7e95-4b5d-ba12-e57a120bb897" width="300">
 
-![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/6dcd9137-351e-49a2-9f85-527b444ec1b9)
+<img src="https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/6dcd9137-351e-49a2-9f85-527b444ec1b9" width="300">
 
-![image](https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/eef154db-530c-4977-ae57-e68ba91c097a)
+<img src="https://github.com/NoaGilboa/24A10357-Noa-Gilboa-final-project---B-/assets/143444119/eef154db-530c-4977-ae57-e68ba91c097a" width="300">
+
 
 
 ## Video Demonstration
