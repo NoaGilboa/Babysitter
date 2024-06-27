@@ -12,9 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.babysitter.R;
 
-public class activity_splash extends AppCompatActivity {
+public class ActivitySplash extends AppCompatActivity {
 
-    private static final String TAG = activity_splash.class.getSimpleName();
+    private static final String TAG = ActivitySplash.class.getSimpleName();
 
     final int ANIM_DURATION = 4400;
 
@@ -73,7 +73,7 @@ public class activity_splash extends AppCompatActivity {
     }
 
     private void openHomeActivity() {
-        Intent intent = new Intent(this, activity_login.class);
+        Intent intent = new Intent(this, ActivityLogin.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         startActivity(intent);
         finish();

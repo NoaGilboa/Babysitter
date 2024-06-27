@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -17,7 +19,7 @@
         android:theme="@style/AppTheme"
         tools:targetApi="31">
         <activity
-            android:name=".Views.activity_splash"
+            android:name=".Views.ActivitySplash"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,27 +38,23 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".Views.activity_login"
-            android:exported="true">
-        </activity>
+            android:name=".Views.ActivityLogin"
+            android:exported="true" />
         <activity
-        android:name=".Views.activity_register"
-        android:exported="true">
-    </activity>
+            android:name=".Views.ActivityRegister"
+            android:exported="true" />
         <activity
-            android:name=".Views.activity_home_parent"
-            android:exported="true">
-        </activity>
+            android:name=".Views.ActivityHomeParent"
+            android:exported="true" />
         <activity
-            android:name=".Views.activity_home_babysitter"
-            android:exported="true">
-        </activity>
+            android:name=".Views.ActivityHomeBabysitter"
+            android:exported="true" />
         <activity
-            android:name=".Views.activity_setting"
+            android:name=".Views.ActivitySetting"
             android:exported="true">
             <meta-data
                 android:name="com.google.android.maps.v2.API_KEY"
-                android:value="AIzaSyDzAcP3qzgSMuDqeFZDTyH_yRoH8yBeRNA"/>
+                android:value="AIzaSyDzAcP3qzgSMuDqeFZDTyH_yRoH8yBeRNA" />
         </activity>
 
     </application>

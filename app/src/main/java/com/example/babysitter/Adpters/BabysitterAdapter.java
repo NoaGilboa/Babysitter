@@ -88,8 +88,8 @@ public class BabysitterAdapter extends RecyclerView.Adapter<BabysitterAdapter.Ba
 
                 String babysitterUID = babysitter.getUid();
                 String parentUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-                BabysittingEvent babysittingEvent = new BabysittingEvent(parentUID,babysitterUID, messageText, selectedDate);
+                String mailParent = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+                BabysittingEvent babysittingEvent = new BabysittingEvent(parentUID, babysitterUID, messageText, selectedDate, mailParent);
                 DatabaseReference messagesRef = FirebaseDatabase.getInstance().getReference().child("Messages").push();
                 babysittingEvent.setMessageId(messagesRef.getKey());
                 messagesRef.setValue(babysittingEvent)
@@ -118,6 +118,7 @@ public class BabysitterAdapter extends RecyclerView.Adapter<BabysitterAdapter.Ba
         TextView tvBabysitterName, tvBabysitterPhone, tvBabysitterEmail, tvBabysitterAddress, tvBabysitterAge, tvBabysitterSmokes, tvBabysitterMaritalStatus, tvBabysitterDescription, tvBabysitterHourlyWage, tvBabysitterExperience, tvSelectedDate;
         EditText messageEditText;
         Button showDatePickerButton, btnSendMessage;
+
         public BabysitterViewHolder(@NonNull View itemView) {
             super(itemView);
             tvBabysitterName = itemView.findViewById(R.id.tvBabysitterName);
@@ -129,11 +130,11 @@ public class BabysitterAdapter extends RecyclerView.Adapter<BabysitterAdapter.Ba
             tvBabysitterMaritalStatus = itemView.findViewById(R.id.tvBabysitterMaritalStatus);
             tvBabysitterDescription = itemView.findViewById(R.id.tvBabysitterDescription);
             tvBabysitterHourlyWage = itemView.findViewById(R.id.tvBabysitterHourlyWage);
-            tvBabysitterExperience=itemView.findViewById(R.id.tvBabysitterExperience);
+            tvBabysitterExperience = itemView.findViewById(R.id.tvBabysitterExperience);
             messageEditText = itemView.findViewById(R.id.messageEditText);
             showDatePickerButton = itemView.findViewById(R.id.showDatePickerButton);
             tvSelectedDate = itemView.findViewById((R.id.tvSelectedDate));
-            btnSendMessage=itemView.findViewById(R.id.btnSendMessage);
+            btnSendMessage = itemView.findViewById(R.id.btnSendMessage);
         }
 
 

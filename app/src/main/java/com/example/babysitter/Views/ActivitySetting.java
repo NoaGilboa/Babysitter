@@ -5,10 +5,8 @@ import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,8 +14,7 @@ import com.example.babysitter.GPSTracker;
 import com.example.babysitter.Models.Babysitter;
 import com.example.babysitter.Models.Parent;
 import com.example.babysitter.R;
-import com.example.babysitter.Utilities.FirebaseDataManager;
-import com.example.babysitter.Utilities.FirebaseUserManager;
+import com.example.babysitter.Utilities.DataManager;
 import com.example.babysitter.databinding.ActivitySettingsBinding;
 
 import java.io.IOException;
@@ -28,11 +25,10 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
-public class activity_setting extends AppCompatActivity {
+public class ActivitySetting extends AppCompatActivity {
 
     private ActivitySettingsBinding binding;
-    private FirebaseDataManager dataManager;
-    private FirebaseUserManager userManager;
+    private DataManager dataManager;
 
     private double latitude = 0;
     private double longitude = 0;
@@ -44,15 +40,14 @@ public class activity_setting extends AppCompatActivity {
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        dataManager = new FirebaseDataManager();
-        userManager = new FirebaseUserManager();
+        dataManager = new DataManager();
 
         loadData();
 
         binding.btnSave.setOnClickListener(v -> saveData());
         findViewById(R.id.btnHome).setOnClickListener(v -> navigateToHome());
         binding.etAddress.setOnClickListener(view -> {
-            GPSTracker gpsTracker = new GPSTracker(activity_setting.this);
+            GPSTracker gpsTracker = new GPSTracker(ActivitySetting.this);
             if (gpsTracker.canGetLocation()) {
                 this.latitude = gpsTracker.getLatitude();
                 this.longitude = gpsTracker.getLongitude();
@@ -66,28 +61,23 @@ public class activity_setting extends AppCompatActivity {
     }
 
     private void loadData() {
-        if (userManager.isUserLoggedIn()) {
-            String uid = userManager.getCurrentUserId();
-            dataManager.loadUserData(uid, new FirebaseDataManager.OnUserDataLoadedListener() {
-                @Override
-                public void onBabysitterLoaded(Babysitter babysitter) {
-                    updateUIWithBabysitter(babysitter);
-                }
-
-                @Override
-                public void onParentLoaded(Parent parent) {
-                    updateUIWithParent(parent);
-                }
-
-                @Override
-                public void onFailure(Exception exception) {
-                    Toast.makeText(activity_setting.this, "Failed to load data: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else {
-            startActivity(new Intent(this, activity_login.class)); // Redirect to login if not logged in
-            finish();
-        }
+//            String uid = DataManager.getCurrentUserId();
+//            dataManager.loadUserData(uid, new DataManager.OnUserDataLoadedListener() {
+//                @Override
+//                public void onBabysitterLoaded(Babysitter babysitter) {
+//                    updateUIWithBabysitter(babysitter);
+//                }
+//
+//                @Override
+//                public void onParentLoaded(Parent parent) {
+//                    updateUIWithParent(parent);
+//                }
+//
+//                @Override
+//                public void onFailure(Exception exception) {
+//                    Toast.makeText(activity_setting.this, "Failed to load data: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+//                }
+//            });
     }
 
     private void updateUIWithBabysitter(Babysitter babysitter) {
@@ -147,63 +137,59 @@ public class activity_setting extends AppCompatActivity {
     }
 
     private void saveData() {
-        if (!userManager.isUserLoggedIn()) {
-            Toast.makeText(this, "Not logged in.", Toast.LENGTH_SHORT).show();
-            return;
-        }
 
-        String name = binding.etName.getText().toString().trim();
-        String phone = binding.etPhone.getText().toString().trim();
-        String email = binding.etMail.getText().toString().trim();
-        String address = binding.etAddress.getText().toString().trim();
-        String uid = userManager.getCurrentUserId();
-
-        if (TextUtils.isEmpty(name) || TextUtils.isEmpty(phone) || TextUtils.isEmpty(email)) {
-            Toast.makeText(this, "Please fill in all required fields.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (binding.tvAge.getVisibility() == View.VISIBLE) {
-            Babysitter babysitter = new Babysitter(uid, name, phone, email, address, this.password,
-                    binding.etDateOfBirth.getText().toString(),
-                    binding.rgSmoke.getCheckedRadioButtonId() == R.id.rbSmokeYes,
-                    binding.etMaritalStatus.getText().toString(),
-                    binding.etDescription.getText().toString(),
-                    Double.parseDouble(binding.etHourlyWage.getText().toString()),
-                    Double.parseDouble(binding.etExperience.getText().toString()), this.latitude, this.longitude);
-            dataManager.saveUserData(babysitter, new FirebaseDataManager.OnUserDataSavedListener() {
-                @Override
-                public void onSuccess() {
-                    Toast.makeText(activity_setting.this, "Babysitter information updated successfully.", Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onFailure(Exception e) {
-                    Toast.makeText(activity_setting.this, "Failed to update babysitter information: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else {
-            Parent parent = new Parent(uid, name, phone, email, address, this.password,
-                    Integer.parseInt(binding.etNumberOfChildren.getText().toString()), this.latitude, this.longitude);
-            dataManager.saveUserData(parent, new FirebaseDataManager.OnUserDataSavedListener() {
-                @Override
-                public void onSuccess() {
-                    Toast.makeText(activity_setting.this, "Parent information updated successfully.", Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onFailure(Exception e) {
-                    Toast.makeText(activity_setting.this, "Failed to update parent information: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+//        String name = binding.etName.getText().toString().trim();
+//        String phone = binding.etPhone.getText().toString().trim();
+//        String email = binding.etMail.getText().toString().trim();
+//        String address = binding.etAddress.getText().toString().trim();
+//        //String uid = DataManager.getCurrentUserId();
+//
+//        if (TextUtils.isEmpty(name) || TextUtils.isEmpty(phone) || TextUtils.isEmpty(email)) {
+//            Toast.makeText(this, "Please fill in all required fields.", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//
+//        if (binding.tvAge.getVisibility() == View.VISIBLE) {
+//            Babysitter babysitter = new Babysitter(uid, name, phone, email, address, this.password,
+//                    binding.etDateOfBirth.getText().toString(),
+//                    binding.rgSmoke.getCheckedRadioButtonId() == R.id.rbSmokeYes,
+//                    binding.etMaritalStatus.getText().toString(),
+//                    binding.etDescription.getText().toString(),
+//                    Double.parseDouble(binding.etHourlyWage.getText().toString()),
+//                    Double.parseDouble(binding.etExperience.getText().toString()), this.latitude, this.longitude);
+//            dataManager.saveUserData(babysitter, new DataManager.OnUserDataSavedListener() {
+//                @Override
+//                public void onSuccess() {
+//                    Toast.makeText(activity_setting.this, "Babysitter information updated successfully.", Toast.LENGTH_SHORT).show();
+//                }
+//
+//                @Override
+//                public void onFailure(Exception e) {
+//                    Toast.makeText(activity_setting.this, "Failed to update babysitter information: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+//                }
+//            });
+//        } else {
+//            Parent parent = new Parent(uid, name, phone, email, address, this.password,
+//                    Integer.parseInt(binding.etNumberOfChildren.getText().toString()), this.latitude, this.longitude);
+//            dataManager.saveUserData(parent, new DataManager.OnUserDataSavedListener() {
+//                @Override
+//                public void onSuccess() {
+//                    Toast.makeText(activity_setting.this, "Parent information updated successfully.", Toast.LENGTH_SHORT).show();
+//                }
+//
+//                @Override
+//                public void onFailure(Exception e) {
+//                    Toast.makeText(activity_setting.this, "Failed to update parent information: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+//                }
+//            });
+//        }
     }
 
     private void navigateToHome() {
         if (binding.tvAge.getVisibility() == View.VISIBLE) {
-            startActivity(new Intent(activity_setting.this, activity_home_babysitter.class));
+            startActivity(new Intent(ActivitySetting.this, ActivityHomeBabysitter.class));
         } else {
-            startActivity(new Intent(activity_setting.this, activity_home_parent.class));
+            startActivity(new Intent(ActivitySetting.this, ActivityHomeParent.class));
         }
     }
 

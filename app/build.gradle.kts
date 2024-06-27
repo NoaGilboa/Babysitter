@@ -7,7 +7,7 @@ android {
     namespace = "com.example.babysitter"
     compileSdk = 34
 
-    buildFeatures{
+    buildFeatures {
         buildConfig = true
         viewBinding = true
     }
@@ -21,13 +21,17 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GOOGLE_MAPS_API_KEY", "\"${properties["GoogleMapsApiKey"]}\"")
-        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = properties["GoogleMapsApiKey"]?.toString() ?: ""
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] =
+            properties["GoogleMapsApiKey"]?.toString() ?: ""
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
@@ -48,17 +52,27 @@ dependencies {
 
     implementation("com.squareup.picasso:picasso:2.8")
 
+    implementation ("com.google.code.gson:gson:2.11.0")
+
     // firebase
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-auth")
-    implementation ("com.firebaseui:firebase-ui-auth:8.0.2")
+    implementation("com.firebaseui:firebase-ui-auth:8.0.2")
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-storage")
 
     //map
     implementation("com.google.android.gms:play-services-auth:21.2.0")
-    implementation ("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
+
+    //Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Rest API calls
+
+    //implementation(libs.retrofit)
+    //implementation(libs.converter.gson)
 
 }

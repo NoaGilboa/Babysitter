@@ -79,37 +79,37 @@ public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentView
             if (babysittingEvent.getStatus()) {
                 holder.tvStatus.setText("Approved");
                 holder.BtnApprov.setVisibility(View.GONE);
-            }
-            else {
+            } else {
                 holder.tvStatus.setText("Canceled");
                 holder.BtnCancel.setVisibility(View.GONE);
             }
         }
-            holder.BtnApprov.setOnClickListener(v -> {
-                int position = holder.getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION) {
-                    babysittingEvent.setStatus(true);
-                    holder.tvStatus.setText("Approved");
-                    holder.tvStatus.setVisibility(View.VISIBLE);
-                    holder.BtnApprov.setVisibility(View.GONE);
-                    holder.BtnCancel.setVisibility(View.VISIBLE);
-                    updateEventInFirebase(babysittingEvent, position);
-                }
-            });
+        holder.BtnApprov.setOnClickListener(v -> {
+            int position = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                babysittingEvent.setStatus(true);
+                holder.tvStatus.setText("Approved");
+                holder.tvStatus.setVisibility(View.VISIBLE);
+                holder.BtnApprov.setVisibility(View.GONE);
+                holder.BtnCancel.setVisibility(View.VISIBLE);
+                updateEventInFirebase(babysittingEvent, position);
+            }
+        });
 
-            holder.BtnCancel.setOnClickListener(v -> {
-                int position = holder.getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION) {
-                    babysittingEvent.setStatus(false);
-                    holder.tvStatus.setText("Canceled");
-                    holder.tvStatus.setVisibility(View.VISIBLE);
-                    holder.BtnCancel.setVisibility(View.GONE);
-                    holder.BtnApprov.setVisibility(View.VISIBLE);
-                    updateEventInFirebase(babysittingEvent, position);
-                }
-            });
+        holder.BtnCancel.setOnClickListener(v -> {
+            int position = holder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                babysittingEvent.setStatus(false);
+                holder.tvStatus.setText("Canceled");
+                holder.tvStatus.setVisibility(View.VISIBLE);
+                holder.BtnCancel.setVisibility(View.GONE);
+                holder.BtnApprov.setVisibility(View.VISIBLE);
+                updateEventInFirebase(babysittingEvent, position);
+            }
+        });
 
     }
+
     private void updateEventInFirebase(BabysittingEvent babysittingEvent, int position) {
         DatabaseReference eventRef = FirebaseDatabase.getInstance().getReference("Messages")
                 .child(babysittingEvents.get(position).getMessageId());

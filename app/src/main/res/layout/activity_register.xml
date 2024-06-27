@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/ic_launcher_background"
-    tools:context=".Views.activity_register">
+    tools:context=".Views.ActivityRegister">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -49,22 +49,22 @@
             android:id="@+id/etName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text"
-            android:hint="Name" />
+            android:hint="Name"
+            android:inputType="text" />
 
         <EditText
             android:id="@+id/etPhone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="phone"
-            android:hint="Phone" />
+            android:hint="Phone"
+            android:inputType="phone" />
 
         <EditText
             android:id="@+id/etMail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textEmailAddress"
-            android:hint="Mail" />
+            android:hint="Mail"
+            android:inputType="textEmailAddress" />
 
         <EditText
             android:id="@+id/etAddress"
@@ -85,22 +85,22 @@
             android:id="@+id/etDateOfBirth"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Date of Birth"
-            android:focusable="false" />
+            android:focusable="false"
+            android:hint="Date of Birth" />
 
         <LinearLayout
             android:id="@+id/smokingLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:visibility="gone"
-            android:gravity="center_horizontal">
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Smoking:"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="8dp"
+                android:text="Smoking:" />
 
             <RadioGroup
                 android:id="@+id/rgSmoke"
@@ -178,20 +178,20 @@
             android:layout_marginTop="15dp"
             android:clickable="true"
             android:focusable="true"
-            android:textColor="@color/pastel_coral"
-            android:textStyle="bold"
             android:hint="alreadyAccount"
-            android:text="Already have account" />
+            android:text="Already have account"
+            android:textColor="@color/pastel_coral"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="25dp"
-            android:elevation="2dp"
-            android:textColor="@color/black"
             android:background="@color/pastel_pink"
-            android:text="Register" />
+            android:elevation="2dp"
+            android:text="Register"
+            android:textColor="@color/black" />
 
     </LinearLayout>
 </ScrollView>
