@@ -1,5 +1,8 @@
 package com.example.babysitter.Utilities;
 
+import android.os.Handler;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.example.babysitter.ExternalModels.CreatedBy;
@@ -7,12 +10,7 @@ import com.example.babysitter.ExternalModels.NewUserBoundary;
 import com.example.babysitter.ExternalModels.ObjectBoundary;
 import com.example.babysitter.ExternalModels.Role;
 import com.example.babysitter.ExternalModels.UserBoundary;
-import com.example.babysitter.Models.Babysitter;
-import com.example.babysitter.Models.BabysittingEvent;
 import com.example.babysitter.Models.User;
-import android.util.Log;
-
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -50,62 +48,55 @@ public class DataManager {
                     ObjectBoundary userData = user.toBoundary();
                     userData.setCreatedBy(userId);
                     listenerCreate.onUserCreated(email);
-                    userService.saveUserData(userData).enqueue(new Callback<ObjectBoundary>() {
+                    // Delay the user data creation by 10 seconds
+                    new Handler().postDelayed(new Runnable() {
                         @Override
-                        public void onResponse(@NonNull Call<ObjectBoundary> call, @NonNull Response<ObjectBoundary> response) {
-                            if (response.isSuccessful()) {
-                                listenerSave.onSuccess();
-                            } else {
-                                logError(response, "saveUserData");
-                                listenerSave.onFailure(new Exception("Failed to save user data"));
-                            }
+                        public void run() {
+                            userService.saveUserData(userData).enqueue(new Callback<ObjectBoundary>() {
+                                @Override
+                                public void onResponse(@NonNull Call<ObjectBoundary> call, @NonNull Response<ObjectBoundary> response) {
+                                    if (response.isSuccessful()) {
+                                        listenerSave.onSuccess();
+                                    } else {
+                                        logError(response, "saveUserData");
+                                        listenerSave.onFailure(new Exception("Failed to save user data"));
+                                    }
+                                }
+                                @Override
+                                public void onFailure(@NonNull Call<ObjectBoundary> call, Throwable t) {
+                                    listenerSave.onFailure(new Exception("Failed to save user"));
+                                }
+                            });
                         }
-
-                        @Override
-                        public void onFailure(@NonNull Call<ObjectBoundary> call, Throwable t) {
-                            listenerSave.onFailure(new Exception("Failed to save user"));
-                        }
-                    });
+                    }, 10000); // 4-second delay
                 } else {
                     logError(response, "createUser");
-                    listenerCreate.onFailure(new Exception("Failed to create user"));
+                    listenerCreate.onFailure(new Exception("Failed to create user: " + getErrorMessage(response)));
+
                 }
             }
 
-//                    userService.saveUserData(userData).enqueue(new Callback<ObjectBoundary>() {
-//                        @Override
-//                        public void onResponse(@NonNull Call<ObjectBoundary> call, @NonNull Response<ObjectBoundary> response) {
-//                            if (response.isSuccessful()) {
-//                                listenerSave.onSuccess();
-//                            } else {
-//                                logError(response, "saveUserData");
-//                                listenerSave.onFailure(new Exception("Failed to save user data"));
-//                            }
-//                        }
-//
-//                        @Override
-//                        public void onFailure(@NonNull Call<ObjectBoundary> call, Throwable t) {
-//                            listenerSave.onFailure(new Exception("Failed to save user"));
-//                        }
-//                    });
-//                } else {
-//                    logError(response, "createUser");
-//                    listenerCreate.onFailure(new Exception("Failed to create user"));
-//                }
-//            }
-
             @Override
             public void onFailure(@NonNull Call<UserBoundary> call, Throwable t) {
-                listenerCreate.onFailure(new Exception("Failed to create  "));
+                listenerCreate.onFailure(new Exception("Failed "+   t.getMessage() ));
+                Log.e("DataManager", "Error in createUser: " + t.getMessage());
             }
         });
     }
 
     private void logError(Response<?> response, String methodName) {
         try {
-            Log.e("DataManager", "Error in " + methodName + ": " + response.errorBody().string());
+            Log.e("DataManager", "Error in " + methodName + ": " + response.errorBody().string() + " | HTTP Status Code: " + response.code());
         } catch (Exception e) {
             Log.e("DataManager", "Error in " + methodName + ": Could not read error body", e);
+        }
+    }
+
+    private String getErrorMessage(Response<?> response) {
+        try {
+            return response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+        } catch (Exception e) {
+            return "Could not read error body";
         }
     }
 

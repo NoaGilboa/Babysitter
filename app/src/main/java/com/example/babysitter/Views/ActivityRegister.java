@@ -169,7 +169,7 @@ public class ActivityRegister extends AppCompatActivity {
                     Double.parseDouble(etHourlyWage.getText().toString().trim()),
                     Double.parseDouble(etExperience.getText().toString().trim()),
                     latitude, longitude);
-            //tvAge.setText(babysitter.getAge());
+            tvAge.setText(babysitter.getAge());
             user=babysitter;
         } else if (rbParent.isChecked()) {
              Parent parent = new Parent(uid, name, phone, email, address, password,
@@ -178,9 +178,10 @@ public class ActivityRegister extends AppCompatActivity {
              user=parent;
         }
         if (user != null) {
-            dataManager.createUser(email, user, new DataManager.OnUserCreationListener() {
+            dataManager.createUser(email, user instanceof Babysitter? (Babysitter) user : (Parent) user, new DataManager.OnUserCreationListener() {
                 @Override
                 public void onUserCreated(String email) {
+
                     Toast.makeText(ActivityRegister.this, "Registration successful", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(ActivityRegister.this, ActivityLogin.class));
                 }
@@ -205,6 +206,7 @@ public class ActivityRegister extends AppCompatActivity {
             });
         }
     }
+
 //        if (user!=null) {
 //            dataManager.createUser(email, user, new DataManager.OnUserCreationListener(){
 //                @Override
