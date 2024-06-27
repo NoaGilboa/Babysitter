@@ -3,18 +3,31 @@ package com.example.babysitter.Views;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.babysitter.Models.Babysitter;
+import com.example.babysitter.Models.Parent;
+import com.example.babysitter.Models.User;
+import com.example.babysitter.Utilities.BabysitterService;
 import com.example.babysitter.Utilities.DataManager;
 
+import com.example.babysitter.Utilities.ParentService;
+import com.example.babysitter.Utilities.UserService;
 import com.example.babysitter.databinding.ActivityLoginBinding;
+import com.google.gson.Gson;
 
 public class ActivityLogin extends AppCompatActivity {
 
     ActivityLoginBinding binding;
     ProgressDialog progressDialog;
     DataManager dataManager;
+    private Gson gson = new Gson();
+    private UserService userService;
+    private ParentService parentService;
+    private BabysitterService babysitterService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,57 +41,54 @@ public class ActivityLogin extends AppCompatActivity {
         progressDialog.setTitle("Login");
         progressDialog.setMessage("Please Wait...");
 
-//        binding.btnLogin.setOnClickListener(view -> {
-//            String email = binding.etEmail.getText().toString();
-//            String password = binding.etPassword.getText().toString();
-//            if (!email.isEmpty() && !password.isEmpty()) {
-//                progressDialog.show();
-//                dataManager.loginUser(email, password, this, new FirebaseUserManager.OnLoginListener() {
-//                    @Override
-//                    public void onLoginSuccess(String uid) {
-//                        checkUserRole(uid);
-//                    }
-//
-//                    @Override
-//                    public void onLoginFailure(Exception e) {
-//                        progressDialog.dismiss();
-//                        Toast.makeText(activity_login.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-//            } else {
-//                Toast.makeText(activity_login.this, "Enter Email and Password", Toast.LENGTH_SHORT).show();
-//            }
-//        });
-
         binding.alreadyAccount.setOnClickListener(v -> startActivity(new Intent(ActivityLogin.this, ActivityRegister.class)));
+
+        binding.btnLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String email = binding.etEmail.getText().toString();
+                String password = binding.etPassword.getText().toString();
+                if (!email.isEmpty() && !password.isEmpty()) {
+                    progressDialog.show();
+                    login(email, password);
+                } else {
+                    Toast.makeText(ActivityLogin.this, "Enter Email and Password", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
-    private void checkUserRole(String uid) {
-        String role = binding.rbBabysitter.isChecked() ? "Babysitter" : "Parent";
-//        dataManager.checkUserRole(uid, role, new DataManager.OnRoleCheckListener() {
-//            @Override
-//            public void onRoleConfirmed() {
-//                progressDialog.dismiss();
-//                if (binding.rbBabysitter.isChecked()) {
-//                    startActivity(new Intent(activity_login.this, Activity_home_babysitter.class));
-//                } else {
-//                    startActivity(new Intent(activity_login.this, activity_home_parent.class));
-//                }
-//                finish();
-//            }
-//
-//            @Override
-//            public void onRoleDenied() {
-//                progressDialog.dismiss();
-//                Toast.makeText(activity_login.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
-//            }
-//
-//            @Override
-//            public void onError(Exception e) {
-//                progressDialog.dismiss();
-//                Toast.makeText(activity_login.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//    }
+    private void login(String email, String password) {
+        dataManager.loginUser(email, password, new DataManager.OnLoginListener() {
+            @Override
+            public void onSuccess(User user) {
+                progressDialog.dismiss();
+                Toast.makeText(ActivityLogin.this, "Login successful", Toast.LENGTH_SHORT).show();
+                if (binding.rbBabysitter.isChecked()) {
+                    if(user instanceof Babysitter){
+                        startActivity(new Intent(ActivityLogin.this, ActivityHomeBabysitter.class));
+                    }
+                    else {
+                        Toast.makeText(ActivityLogin.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+                    }
+                } else if (binding.rbParent.isChecked()) {
+                    if(user instanceof Parent){
+                        startActivity(new Intent(ActivityLogin.this, ActivityHomeParent.class));
+                    }
+                    else {
+                        Toast.makeText(ActivityLogin.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                else {
+                    Toast.makeText(ActivityLogin.this, "Must select a user type", Toast.LENGTH_SHORT).show();
+                }
+                finish();
+            }
+            @Override
+            public void onFailure(Exception exception) {
+                progressDialog.dismiss();
+                Toast.makeText(ActivityLogin.this, exception.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

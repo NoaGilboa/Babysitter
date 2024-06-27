@@ -10,7 +10,12 @@ import com.example.babysitter.ExternalModels.NewUserBoundary;
 import com.example.babysitter.ExternalModels.ObjectBoundary;
 import com.example.babysitter.ExternalModels.Role;
 import com.example.babysitter.ExternalModels.UserBoundary;
+import com.example.babysitter.Models.Babysitter;
+import com.example.babysitter.Models.Parent;
 import com.example.babysitter.Models.User;
+import com.google.gson.Gson;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -22,6 +27,7 @@ public class DataManager {
     //private ParentService parentService;
     //private EventService eventService;
     private UserService userService;
+    private String superapp=null;
 
 
     public DataManager() {
@@ -30,6 +36,7 @@ public class DataManager {
         //this.parentService = database.getClient().create(ParentService.class);
         //this.eventService = database.getClient().create(EventService.class);
         this.userService = database.getClient().create(UserService.class);
+
     }
 
     public void createUser(String email, User user, OnUserCreationListener listenerCreate, OnDataSavedListener listenerSave) {
@@ -46,6 +53,7 @@ public class DataManager {
                     CreatedBy userId = new CreatedBy();
                     userId.setUserId(userBoundary.getUserId());
                     ObjectBoundary userData = user.toBoundary();
+                    superapp = userData.getCreatedBy().getUserId().getSuperapp();
                     userData.setCreatedBy(userId);
                     listenerCreate.onUserCreated(email);
                     // Delay the user data creation by 10 seconds
@@ -84,6 +92,55 @@ public class DataManager {
         });
     }
 
+    public void loginUser(String email, String password, OnLoginListener listener) {
+        Call<UserBoundary> userCall = userService.getUserById(superapp,email);
+        userCall.enqueue(new Callback<UserBoundary>() {
+            @Override
+            public void onResponse(Call<UserBoundary> call, Response<UserBoundary> userResponse) {
+                if (userResponse.isSuccessful() && userResponse.body() != null) {
+                    UserBoundary user = userResponse.body();
+                    Call<List<ObjectBoundary>> objectsCall = userService.getAllObjectsByPassword(password);
+                    objectsCall.enqueue(new Callback<List<ObjectBoundary>>() {
+                        @Override
+                        public void onResponse(Call<List<ObjectBoundary>> call, Response<List<ObjectBoundary>> objectsResponse) {
+                            if (objectsResponse.isSuccessful() && objectsResponse.body() != null) {
+                                List<ObjectBoundary> allObjects = objectsResponse.body();
+                                for (ObjectBoundary object : allObjects) {
+                                    if (object.getCreatedBy().getUserId().getEmail().equals(email)) {
+                                        if(object.getType().equals("Babysitter")){
+                                            Babysitter babysitter = new Babysitter();
+                                            babysitter.toBabysitter(new Gson().toJson(object,ObjectBoundary.class));
+                                            listener.onSuccess(babysitter);
+                                        } else if(object.getType().equals("Parent")){
+                                            Parent parent = new Parent();
+                                            parent.toParent(new Gson().toJson(object,ObjectBoundary.class));
+                                            listener.onSuccess(parent);
+                                        }
+                                    }
+                                }
+                            } else {
+                                listener.onFailure(new Exception("Failed to fetch objects"));
+                            }
+                        }
+                        @Override
+                        public void onFailure(Call<List<ObjectBoundary>> call, Throwable t) {
+                            listener.onFailure(new Exception(t));
+                        }
+                    });
+                } else {
+                    listener.onFailure(new Exception("Failed to fetch user"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UserBoundary> call, Throwable t) {
+                listener.onFailure(new Exception(t));
+            }
+        });
+    }
+
+
+
     private void logError(Response<?> response, String methodName) {
         try {
             Log.e("DataManager", "Error in " + methodName + ": " + response.errorBody().string() + " | HTTP Status Code: " + response.code());
@@ -98,6 +155,12 @@ public class DataManager {
         } catch (Exception e) {
             return "Could not read error body";
         }
+    }
+
+    public interface OnLoginListener {
+        void onSuccess(User user);
+
+        void onFailure(Exception exception);
     }
 
     public interface OnUserCreationListener {
