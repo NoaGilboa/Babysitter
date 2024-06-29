@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/ic_launcher_background"
-    tools:context=".Views.ActivityRegister">
+    tools:context=".views.ActivityRegister">
 
     <LinearLayout
         android:layout_width="match_parent"

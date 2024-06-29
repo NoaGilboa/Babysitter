@@ -21,7 +21,7 @@
         android:theme="@style/AppTheme"
         tools:targetApi="31">
         <activity
-            android:name=".Views.ActivitySplash"
+            android:name=".views.ActivitySplash"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,26 +33,26 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".Views.MainActivity"
+            android:name=".views.MainActivity"
             android:exported="true">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".Views.ActivityLogin"
+            android:name=".views.ActivityLogin"
             android:exported="true" />
         <activity
-            android:name=".Views.ActivityRegister"
+            android:name=".views.ActivityRegister"
             android:exported="true" />
         <activity
-            android:name=".Views.ActivityHomeParent"
+            android:name=".views.ActivityHomeParent"
             android:exported="true" />
         <activity
-            android:name=".Views.ActivityHomeBabysitter"
+            android:name=".views.ActivityHomeBabysitter"
             android:exported="true" />
         <activity
-            android:name=".Views.ActivitySetting"
+            android:name=".views.ActivitySetting"
             android:exported="true">
             <meta-data
                 android:name="com.google.android.maps.v2.API_KEY"
