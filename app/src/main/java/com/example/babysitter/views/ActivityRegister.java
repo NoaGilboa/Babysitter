@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
@@ -225,6 +226,7 @@ public class ActivityRegister extends AppCompatActivity {
                         public void onFailure(Exception exception) {
                             progressDialog.dismiss();
                             Toast.makeText(ActivityRegister.this, "Data updating failed: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                            Log.e("DataManager", "Error in createUser: " + exception.getMessage());
                         }
                     });
                 }

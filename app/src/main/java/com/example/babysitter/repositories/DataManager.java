@@ -34,7 +34,7 @@ public class DataManager {
     private ParentService parentService;
     private EventService eventService;
     private UserService userService;
-    private static String superapp = "2024b.yarden.cherry";
+    private final String superapp = "2024b.yarden.cherry";
     private static String currentUserEmail = "";
 
     public DataManager() {
@@ -61,7 +61,7 @@ public class DataManager {
                     CreatedBy userId = new CreatedBy();
                     userId.setUserId(userBoundary.getUserId());
                     ObjectBoundary userData = user.toBoundary();
-                    setSuperapp(userData.getCreatedBy().getUserId().getSuperapp());
+                    //superapp = userData.getCreatedBy().getUserId().getSuperapp();
                     userData.setCreatedBy(userId);
                     userData.setAlias(user.getPassword());
                     listenerCreate.onUserCreated(email);
@@ -79,19 +79,22 @@ public class DataManager {
 
                                     // Update user after another 4-second delay
                                     new Handler().postDelayed(() -> {
-                                        userService.updateUser(superapp, email, userBoundary).enqueue(new Callback<Void>() {
+                                        userService.updateUser(userData.getCreatedBy().getUserId().getSuperapp(), email, userBoundary).enqueue(new Callback<Void>() {
                                             @Override
                                             public void onResponse(Call<Void> call, Response<Void> response) {
                                                 if (response.isSuccessful()) {
                                                     listenerUpdate.onSuccess();
                                                 } else {
                                                     listenerUpdate.onFailure(new Exception("Failed to update user: " + getErrorMessage(response)));
+                                                    logError(response, "updateUser");
+
                                                 }
                                             }
 
                                             @Override
                                             public void onFailure(Call<Void> call, Throwable t) {
                                                 listenerUpdate.onFailure(new Exception("Failed to update user: " + t.getMessage()));
+                                                logError(response, "updateUser");
                                             }
                                         });
                                     }, 10000); // 4-second delay
@@ -123,7 +126,7 @@ public class DataManager {
 
     public void loginUser(String email, String password, OnLoginListener listener) {
         setCurrentUserEmail(email);
-        Call<UserBoundary> userCall = userService.getUserById(getSuperapp(), email);
+        Call<UserBoundary> userCall = userService.getUserById(superapp, email);
         userCall.enqueue(new Callback<UserBoundary>() {
             @Override
             public void onResponse(Call<UserBoundary> call, Response<UserBoundary> userResponse) {
@@ -171,7 +174,7 @@ public class DataManager {
     }
 
     public void loadAllBabysitters(OnBabysittersLoadedListener listener) {
-        Call<List<ObjectBoundary>> call = babysitterService.loadAllBabysitters(Babysitter.class.getName(), getSuperapp(), getCurrentUserEmail());
+        Call<List<ObjectBoundary>> call = babysitterService.loadAllBabysitters(Babysitter.class.getName(), superapp, getCurrentUserEmail());
         call.enqueue(new Callback<List<ObjectBoundary>>() {
             @Override
             public void onResponse(Call<List<ObjectBoundary>> call, Response<List<ObjectBoundary>> response) {
@@ -243,9 +246,6 @@ public class DataManager {
         void onFailure(Exception exception);
     }
 
-    public void setSuperapp(String superapp) {
-        this.superapp = superapp;
-    }
 
     public void setCurrentUserEmail(String email) {
         this.currentUserEmail = email;

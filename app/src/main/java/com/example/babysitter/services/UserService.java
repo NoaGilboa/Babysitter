@@ -34,7 +34,7 @@ public interface UserService {
 
 
     @PUT("/superapp/users/{superapp}/{email}")
-    Call<Void> updateUser(@Path("superapp") String superapp,@Path("email") String email, @Body UserBoundary update);
+    Call<Void> updateUser(@Path("superapp") String superapp, @Path("email") String email, @Body UserBoundary update);
 
 }
 
