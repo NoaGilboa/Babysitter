@@ -66,6 +66,7 @@ public class DataManager {
 
     public interface OnLogoutListener {
         void onLogoutSuccess();
+
         void onLogoutFailure(Exception exception);
     }
 
@@ -156,37 +157,37 @@ public class DataManager {
                 if (response.isSuccessful() && response.body() != null) {
                     UserBoundary user = response.body();
 
-                    userService.getAllObjectsByPassword(password, 5, 0, superapp, email).enqueue(new Callback<List<ObjectBoundary>>() {
-                        @Override
-                        public void onResponse(Call<List<ObjectBoundary>> call, Response<List<ObjectBoundary>> response) {
-                            if (response.isSuccessful() && response.body() != null) {
-                                List<ObjectBoundary> allObjects = response.body();
-                                for (ObjectBoundary object : allObjects) {
-                                    if (object.getCreatedBy().getUserId().getEmail().equals(email) && object.getAlias().equals(password)) {
-                                        if (object.getType().equals(Babysitter.class.getName())) {
-                                            Babysitter babysitter = new Babysitter();
-                                            babysitter = babysitter.toBabysitter(new Gson().toJson(object, ObjectBoundary.class));
-                                            listener.onSuccess(babysitter);
-                                            return;
-                                        } else if (object.getType().equals(Parent.class.getName())) {
-                                            Parent parent = new Parent();
-                                            parent = parent.toParent(new Gson().toJson(object, ObjectBoundary.class));
-                                            listener.onSuccess(parent);
-                                            return;
+                    userService.getObjectById(user.getUsername(), user.getUserId().getSuperapp(), superapp, email)
+                            .enqueue(new Callback<ObjectBoundary>() {
+                                @Override
+                                public void onResponse(Call<ObjectBoundary> call, Response<ObjectBoundary> response) {
+                                    if (response.isSuccessful() && response.body() != null) {
+                                        ObjectBoundary object = response.body();
+                                        if (object.getCreatedBy().getUserId().getEmail().equals(email) && object.getAlias().equals(password)) {
+                                            if (object.getType().equals(Babysitter.class.getName())) {
+                                                Babysitter babysitter = new Babysitter();
+                                                babysitter = babysitter.toBabysitter(new Gson().toJson(object, ObjectBoundary.class));
+                                                listener.onSuccess(babysitter);
+                                                return;
+                                            } else if (object.getType().equals(Parent.class.getName())) {
+                                                Parent parent = new Parent();
+                                                parent = parent.toParent(new Gson().toJson(object, ObjectBoundary.class));
+                                                listener.onSuccess(parent);
+                                                return;
+                                            }
                                         }
+                                        listener.onFailure(new Exception("Incorrect password"));
+                                    } else {
+                                        listener.onFailure(new Exception("Password fetch failed"));
                                     }
                                 }
-                                listener.onFailure(new Exception("Incorrect password"));
-                            } else {
-                                listener.onFailure(new Exception("Password fetch failed"));
-                            }
-                        }
+                                @Override
+                                public void onFailure(Call<ObjectBoundary> call, Throwable t) {
+                                    listener.onFailure(new Exception("Network error during password fetch"));
 
-                        @Override
-                        public void onFailure(Call<List<ObjectBoundary>> call, Throwable t) {
-                            listener.onFailure(new Exception("Network error during password fetch"));
-                        }
-                    });
+                                }
+
+                            });
                 } else {
                     listener.onFailure(new Exception("User not found"));
                 }
@@ -279,23 +280,23 @@ public class DataManager {
 
         babysitterService.loadAllBabysittersByDistance(Babysitter.class.getName(), command)
                 .enqueue(new Callback<List<Object>>() {
-            @Override
-            public void onResponse(Call<List<Object>> call, Response<List<Object>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<Object> objects = response.body();
-                    List<Babysitter> babysitters = convertObjectsToBabysitters(objects);
-                    listener.onBabysittersLoaded(babysitters);
-                } else {
-                    logError(response, "fetchBabysittersByDistance");
-                    listener.onFailure(new Exception("Failed to load babysitters"));
-                }
-            }
+                    @Override
+                    public void onResponse(Call<List<Object>> call, Response<List<Object>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            List<Object> objects = response.body();
+                            List<Babysitter> babysitters = convertObjectsToBabysitters(objects);
+                            listener.onBabysittersLoaded(babysitters);
+                        } else {
+                            logError(response, "fetchBabysittersByDistance");
+                            listener.onFailure(new Exception("Failed to load babysitters"));
+                        }
+                    }
 
-            @Override
-            public void onFailure(Call<List<Object>> call, Throwable t) {
-                listener.onFailure(new Exception(t));
-            }
-        });
+                    @Override
+                    public void onFailure(Call<List<Object>> call, Throwable t) {
+                        listener.onFailure(new Exception(t));
+                    }
+                });
     }
 
     private List<Babysitter> convertObjectsToBabysitters(List<Object> objects) {
