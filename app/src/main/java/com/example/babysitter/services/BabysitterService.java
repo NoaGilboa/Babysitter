@@ -1,10 +1,12 @@
 package com.example.babysitter.services;
 
+import com.example.babysitter.externalModels.boundaries.MiniAppCommandBoundary;
 import com.example.babysitter.externalModels.boundaries.ObjectBoundary;
 
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
@@ -20,5 +22,5 @@ public interface BabysitterService {
 
     @POST("/superapp/miniapp/{miniAppName}")
     Call<List<Object>> loadAllBabysittersByDistance(@Path("miniAppName") String miniAppName,
-                                                    @Query("MiniAppCommandBoundary") String commandBoundary);
+                                                    @Body MiniAppCommandBoundary commandBoundary);
 }

@@ -5,11 +5,16 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.example.babysitter.externalModels.utils.CreatedBy;
+import com.example.babysitter.externalModels.boundaries.MiniAppCommandBoundary;
 import com.example.babysitter.externalModels.boundaries.NewUserBoundary;
 import com.example.babysitter.externalModels.boundaries.ObjectBoundary;
-import com.example.babysitter.externalModels.utils.Role;
 import com.example.babysitter.externalModels.boundaries.UserBoundary;
+import com.example.babysitter.externalModels.utils.CommandId;
+import com.example.babysitter.externalModels.utils.CreatedBy;
+import com.example.babysitter.externalModels.utils.ObjectId;
+import com.example.babysitter.externalModels.utils.Role;
+import com.example.babysitter.externalModels.utils.TargetObject;
+import com.example.babysitter.externalModels.utils.UserId;
 import com.example.babysitter.models.Babysitter;
 import com.example.babysitter.models.BabysittingEvent;
 import com.example.babysitter.models.Parent;
@@ -20,8 +25,10 @@ import com.example.babysitter.services.ParentService;
 import com.example.babysitter.services.RetrofitClient;
 import com.example.babysitter.services.UserService;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import retrofit2.Call;
@@ -44,6 +51,22 @@ public class DataManager {
         this.eventService = database.getClient().create(EventService.class);
         this.userService = database.getClient().create(UserService.class);
 
+    }
+
+    public void logout(OnLogoutListener listener) {
+        // Clear the current user email
+        setCurrentUserEmail("");
+
+        // Notify the server about the logout if needed (optional)
+        // This step depends on your backend implementation.
+        // If your backend requires notification of logout, add a corresponding API call here.
+
+        listener.onLogoutSuccess();
+    }
+
+    public interface OnLogoutListener {
+        void onLogoutSuccess();
+        void onLogoutFailure(Exception exception);
     }
 
     public void createUser(String email, User user, OnUserCreationListener listenerCreate, OnDataSavedListener listenerSave, OnUserUpdateListener listenerUpdate) {
@@ -126,52 +149,56 @@ public class DataManager {
 
     public void loginUser(String email, String password, OnLoginListener listener) {
         setCurrentUserEmail(email);
-        Call<UserBoundary> userCall = userService.getUserById(superapp, email);
-        userCall.enqueue(new Callback<UserBoundary>() {
+
+        userService.getUserById(superapp, email).enqueue(new Callback<UserBoundary>() {
             @Override
-            public void onResponse(Call<UserBoundary> call, Response<UserBoundary> userResponse) {
-                if (userResponse.isSuccessful() && userResponse.body() != null) {
-                    UserBoundary user = userResponse.body();
-                    Call<List<ObjectBoundary>> objectsCall = userService.getAllObjectsByPassword(password, 5, 0, superapp, email);
-                    objectsCall.enqueue(new Callback<List<ObjectBoundary>>() {
+            public void onResponse(Call<UserBoundary> call, Response<UserBoundary> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    UserBoundary user = response.body();
+
+                    userService.getAllObjectsByPassword(password, 5, 0, superapp, email).enqueue(new Callback<List<ObjectBoundary>>() {
                         @Override
-                        public void onResponse(Call<List<ObjectBoundary>> call, Response<List<ObjectBoundary>> objectsResponse) {
-                            if (objectsResponse.isSuccessful()) {
-                                List<ObjectBoundary> allObjects = objectsResponse.body();
+                        public void onResponse(Call<List<ObjectBoundary>> call, Response<List<ObjectBoundary>> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                List<ObjectBoundary> allObjects = response.body();
                                 for (ObjectBoundary object : allObjects) {
                                     if (object.getCreatedBy().getUserId().getEmail().equals(email) && object.getAlias().equals(password)) {
                                         if (object.getType().equals(Babysitter.class.getName())) {
                                             Babysitter babysitter = new Babysitter();
                                             babysitter = babysitter.toBabysitter(new Gson().toJson(object, ObjectBoundary.class));
                                             listener.onSuccess(babysitter);
+                                            return;
                                         } else if (object.getType().equals(Parent.class.getName())) {
                                             Parent parent = new Parent();
                                             parent = parent.toParent(new Gson().toJson(object, ObjectBoundary.class));
                                             listener.onSuccess(parent);
+                                            return;
                                         }
                                     }
                                 }
+                                listener.onFailure(new Exception("Incorrect password"));
                             } else {
-                                listener.onFailure(new Exception("Failed to fetch objects"));
+                                listener.onFailure(new Exception("Password fetch failed"));
                             }
                         }
 
                         @Override
                         public void onFailure(Call<List<ObjectBoundary>> call, Throwable t) {
-                            listener.onFailure(new Exception(t));
+                            listener.onFailure(new Exception("Network error during password fetch"));
                         }
                     });
                 } else {
-                    listener.onFailure(new Exception("Failed to fetch user"));
+                    listener.onFailure(new Exception("User not found"));
                 }
             }
 
             @Override
             public void onFailure(Call<UserBoundary> call, Throwable t) {
-                listener.onFailure(new Exception(t));
+                listener.onFailure(new Exception("Network error during user fetch"));
             }
         });
     }
+
 
     public void loadAllBabysitters(OnBabysittersLoadedListener listener) {
         Call<List<ObjectBoundary>> call = babysitterService.loadAllBabysitters(Babysitter.class.getName(), superapp, getCurrentUserEmail());
@@ -200,32 +227,123 @@ public class DataManager {
         });
     }
 
-//    public void sortBabysittersByDistance(ArrayList<Babysitter> babysitters, OnBabysittersSortedListener listener) {
-//
-//        Parent parent;
-//        if (parent != null && parent.getLatitude() != 0 && parent.getLongitude() != 0) {
-//            Collections.sort(babysitters, (b1, b2) -> {
-//                double dist1 = calculateDistance(parent.getLatitude(), parent.getLongitude(), b1.getLatitude(), b1.getLongitude());
-//                double dist2 = calculateDistance(parent.getLatitude(), parent.getLongitude(), b2.getLatitude(), b2.getLongitude());
-//                return Double.compare(dist1, dist2);
-//            });
-//            listener.onSorted(new ArrayList<>(babysitters)); // Ensure a new list instance is passed
-//        } else {
-//            Log.e("SortDistance", "Invalid or missing parent location data.");
-//            listener.onFailure(new Exception("Invalid or missing parent location data"));
-//        }
-//    }
+    public void sortBabysittersByDistance(OnBabysittersLoadedListener listener) {
+        Call<UserBoundary> userCall = userService.getUserById(superapp, currentUserEmail);
+        userCall.enqueue(new Callback<UserBoundary>() {
+            @Override
+            public void onResponse(Call<UserBoundary> call, Response<UserBoundary> userResponse) {
+                if (userResponse.isSuccessful() && userResponse.body() != null) {
+                    UserBoundary user = userResponse.body();
+                    fetchUserLocation(user, listener);
+                } else {
+                    listener.onFailure(new Exception("Failed to fetch user"));
+                }
+            }
 
+            @Override
+            public void onFailure(Call<UserBoundary> call, Throwable t) {
+                listener.onFailure(new Exception("Failed to fetch user"));
+            }
+        });
+    }
 
-    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        final int R = 6371; // Radius of the Earth in kilometers
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                        Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
+    private void fetchUserLocation(UserBoundary user, OnBabysittersLoadedListener listener) {
+        Call<ObjectBoundary> objectCall = userService.getObjectById(user.getUsername(), superapp, user.getUserId().getSuperapp(), user.getUserId().getEmail());
+        objectCall.enqueue(new Callback<ObjectBoundary>() {
+            @Override
+            public void onResponse(Call<ObjectBoundary> call, Response<ObjectBoundary> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ObjectBoundary objectBoundary = response.body();
+                    double latitude = objectBoundary.getLocation().getLat();
+                    double longitude = objectBoundary.getLocation().getLng();
+                    fetchBabysittersByDistance(user, latitude, longitude, listener);
+                } else {
+                    listener.onFailure(new Exception("Failed to fetch user location"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ObjectBoundary> call, Throwable t) {
+                listener.onFailure(new Exception("Failed to fetch user location"));
+            }
+        });
+    }
+
+    private void fetchBabysittersByDistance(UserBoundary user, double latitude, double longitude, OnBabysittersLoadedListener listener) {
+        MiniAppCommandBoundary command = createCommand(
+                "GetAllObjectsByTypeAndLocationAndActive",
+                user,
+                "type", Babysitter.class.getName(),
+                "latitude", String.valueOf(latitude),
+                "longitude", String.valueOf(longitude));
+
+        babysitterService.loadAllBabysittersByDistance(Babysitter.class.getName(), command)
+                .enqueue(new Callback<List<Object>>() {
+            @Override
+            public void onResponse(Call<List<Object>> call, Response<List<Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Object> objects = response.body();
+                    List<Babysitter> babysitters = convertObjectsToBabysitters(objects);
+                    listener.onBabysittersLoaded(babysitters);
+                } else {
+                    logError(response, "fetchBabysittersByDistance");
+                    listener.onFailure(new Exception("Failed to load babysitters"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Object>> call, Throwable t) {
+                listener.onFailure(new Exception(t));
+            }
+        });
+    }
+
+    private List<Babysitter> convertObjectsToBabysitters(List<Object> objects) {
+        List<Babysitter> babysitters = new ArrayList<>();
+        String json = new Gson().toJson(objects);
+        ArrayList<ObjectBoundary> allObjects = new Gson().fromJson(json, new TypeToken<ArrayList<ObjectBoundary>>() {
+        }.getType());
+
+        for (Object object : allObjects) {
+            ObjectBoundary objectBoundary = new Gson().fromJson(new Gson().toJson(object), ObjectBoundary.class);
+            Babysitter babysitter = new Gson().fromJson(new Gson().toJson(objectBoundary.getObjectDetails()), Babysitter.class);
+            babysitters.add(babysitter);
+        }
+
+        return babysitters;
+    }
+
+    public MiniAppCommandBoundary createCommand(String command, UserBoundary user, String... args) {
+        MiniAppCommandBoundary miniappCommand = new MiniAppCommandBoundary();
+        miniappCommand.setCommandAttributes(new HashMap<>());
+        CommandId commandObj = new CommandId();
+        commandObj.setId("1");
+        commandObj.setSuperapp(user.getUserId().getSuperapp());
+        commandObj.setMiniapp(args[1]);
+        miniappCommand.setCommandId(commandObj);
+        miniappCommand.setCommand(command);
+        CreatedBy invokedBy = new CreatedBy();
+        invokedBy.setUserId(new UserId());
+        invokedBy.getUserId().setSuperapp(user.getUserId().getSuperapp());
+        invokedBy.getUserId().setEmail(user.getUserId().getEmail());
+        miniappCommand.setInvokedBy(invokedBy);
+
+        TargetObject target = new TargetObject();
+        target.setObjectId(new ObjectId());
+        target.getObjectId().setSuperapp(user.getUserId().getSuperapp());
+        target.getObjectId().setId(user.getUsername());
+        miniappCommand.setTargetObject(target);
+
+        // Process args as key-value pairs
+        if (args.length % 2 == 0) { // Ensure args are in pairs
+            for (int i = 0; i < args.length; i += 2) {
+                miniappCommand.getCommandAttributes().put(args[i], args[i + 1]);
+            }
+        } else {
+            throw new IllegalArgumentException("Args should be key-value pairs");
+        }
+        Log.d("DataManager", "Command: " + miniappCommand);
+        return miniappCommand;
     }
 
     public interface OnEventsLoadedListener {
@@ -285,108 +403,21 @@ public class DataManager {
 
     public interface OnUserCreationListener {
         void onUserCreated(String email);
+
         void onFailure(Exception exception);
     }
 
     public interface OnDataSavedListener {
         void onSuccess();
+
         void onFailure(Exception exception);
     }
 
     public interface OnUserUpdateListener {
         void onSuccess();
+
         void onFailure(Exception exception);
     }
 
 
-
 }
-//    public Call<List<Parent>> loadAllParents(OnParentsloadedListener listener) {
-//        Call<List<Parent>> call = parentService.loadAllParents();
-//        call.enqueue(new Callback<List<Parent>>() {
-//            @Override
-//            public void onResponse(Call<List<Parent>> call, Response<List<Parent>> response) {
-//                if (response.isSuccessful()) {
-//                    listener.onBabysittersLoaded(response.body());
-//                } else {
-//                    listener.onFailure(new Exception("Failed to load babysitters"));
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<List<Babysitter>> call, Throwable t) {
-//                listener.onFailure(new Exception(t));
-//            }
-//        });
-//        return call;
-//    }
-
-//    public void sortBabysittersByDistance(String userId, List<Babysitter> babysitters, OnBabysittersSortedListener listener) {
-//        DatabaseReference parentRef = database.getReference("Users").child("Parent").child(userId);
-//        parentRef.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                Parent parent = dataSnapshot.getValue(Parent.class);
-//                if (parent != null && parent.getLatitude() != 0 && parent.getLongitude() != 0) {
-//                    Collections.sort(babysitters, (b1, b2) -> {
-//                        double dist1 = calculateDistance(parent.getLatitude(), parent.getLongitude(), b1.getLatitude(), b1.getLongitude());
-//                        double dist2 = calculateDistance(parent.getLatitude(), parent.getLongitude(), b2.getLatitude(), b2.getLongitude());
-//                        return Double.compare(dist1, dist2);
-//                    });
-//                    listener.onSorted(new ArrayList<>(babysitters)); // Ensure a new list instance is passed
-//                } else {
-//                    Log.e("SortDistance", "Invalid or missing parent location data.");
-//                    listener.onFailure(new Exception("Invalid or missing parent location data"));
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//                listener.onFailure(databaseError.toException());
-//            }
-//        });
-//    }
-
-
-//public void sortBabysittersByDistance(ArrayList<Babysitter> babysitters, OnBabysittersLoadedListener listener) {
-//    MiniAppCommandBoundary miniappCommand = new MiniAppCommandBoundary();
-//    miniappCommand.setCommandAttributes(new HashMap<>());
-//    miniappCommand.setCommand("GetAllObjectsByTypeAndLocation");
-//    CreatedBy invokedBy = new CreatedBy();
-//    invokedBy.setUserId(new UserId());
-//    invokedBy.getUserId().setSuperapp(superapp);
-//    invokedBy.getUserId().setEmail(currentUserEmail);
-//    miniappCommand.setInvokedBy(invokedBy);
-//    TargetObject target = new TargetObject();
-//    target.setObjectId(new ObjectId());
-//    target.getObjectId().setSuperapp(superapp);
-//    target.getObjectId().setId();
-//    miniappCommand.setTargetObject(target);
-//    Call<List<Object>> call = babysitterService.loadAllBabysittersByDistance(Babysitter.class.getName(), miniappCommand);
-//    call.enqueue(new Callback<List<Object>>() {
-//        @Override
-//        public void onResponse(Call<List<Object>> call, Response<List<Object>> response) {
-//            if (response.isSuccessful() && response.body() != null) {
-//                List<Object> Objects = response.body();
-//                List<Babysitter> babysitters = new ArrayList<>();
-//                String json = new Gson().toJson(Objects);
-//                ArrayList<ObjectBoundary> allObjects = new Gson().fromJson(json, new TypeToken<ArrayList<ObjectBoundary>>() {
-//                }.getType());
-//                for (Object object : allObjects) {
-//                    ObjectBoundary objectBoundary = new Gson().fromJson(json, new TypeToken<ObjectBoundary>() {
-//                    }.getType());
-//                    Babysitter babysitter = new Gson().fromJson(new Gson().toJson(objectBoundary.getObjectDetails()), Babysitter.class);
-//                    babysitters.add(babysitter);
-//                }
-//                listener.onBabysittersLoaded(babysitters);
-//            } else {
-//                listener.onFailure(new Exception("Failed to load babysitters"));
-//            }
-//        }
-//
-//        @Override
-//        public void onFailure(Call<List<Object>> call, Throwable t) {
-//            listener.onFailure(new Exception(t));
-//        }
-//    });
-//}

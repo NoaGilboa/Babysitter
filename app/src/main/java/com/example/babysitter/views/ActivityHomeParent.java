@@ -41,10 +41,22 @@ public class ActivityHomeParent extends AppCompatActivity {
         loadBabysitters();
 
         findViewById(R.id.btnLogout).setOnClickListener(v -> {
-            //userManager.logOutUser();
-            startActivity(new Intent(ActivityHomeParent.this, ActivityLogin.class));
-            finish();
+            dataManager.logout(new DataManager.OnLogoutListener() {
+                @Override
+                public void onLogoutSuccess() {
+                    Toast.makeText(ActivityHomeParent.this, "Logout successful", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(ActivityHomeParent.this, ActivityLogin.class);
+                    startActivity(intent);
+                    finish();
+                }
+
+                @Override
+                public void onLogoutFailure(Exception exception) {
+                    Toast.makeText(ActivityHomeParent.this, "Logout failed: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         });
+
         findViewById(R.id.btnSettings).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -63,10 +75,20 @@ public class ActivityHomeParent extends AppCompatActivity {
         });
 
         findViewById(R.id.btnSortByDistance).setOnClickListener(v -> {
-            // sortBabysittersByDistance();
-            adapter.notifyDataSetChanged(); // Notify the adapter to refresh the UI.
-        });
+            dataManager.sortBabysittersByDistance(new DataManager.OnBabysittersLoadedListener() {
+                @Override
+                public void onBabysittersLoaded(List<Babysitter> loadedBabysitters) {
+                    babysitters.clear();
+                    babysitters.addAll(loadedBabysitters);
+                    adapter.notifyDataSetChanged();
+                }
+                @Override
+                public void onFailure(Exception exception) {
 
+                    Toast.makeText(ActivityHomeParent.this, "Failed to load babysitters: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
     }
 
     private void loadBabysitters() {
@@ -85,30 +107,5 @@ public class ActivityHomeParent extends AppCompatActivity {
         });
     }
 }
-    //        private void sortBabysittersByDistance() {
-//        if (userManager.isUserLoggedIn()) {
-//            String currentUserId = userManager.getCurrentUserId();
-//            dataManager.sortBabysittersByDistance(currentUserId, new ArrayList<>(babysitters), new DataManager.OnBabysittersSortedListener() {
-//                @Override
-//                public void onSorted(List<Babysitter> sortedBabysitters) {
-//                    if (!sortedBabysitters.isEmpty()) {
-//                        babysitters.clear();
-//                        babysitters.addAll(sortedBabysitters);
-//                        adapter.notifyDataSetChanged();
-//                        Toast.makeText(activity_home_parent.this, "Babysitters sorted by distance", Toast.LENGTH_SHORT).show();
-//                    } else {
-//                        Toast.makeText(activity_home_parent.this, "No babysitters available or error in sorting", Toast.LENGTH_SHORT).show();
-//                    }
-//                }
-//
-//                @Override
-//                public void onFailure(Exception exception) {
-//                    Toast.makeText(activity_home_parent.this, "Error sorting babysitters: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
-//                }
-//            });
-//        } else {
-//            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
-//        }
-//    }
 
 
