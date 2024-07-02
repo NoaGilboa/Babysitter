@@ -25,14 +25,6 @@ public interface UserService {
     @GET("superapp/users/login/{superapp}/{email}")
     Call<UserBoundary> getUserById(@Path("superapp") String superapp, @Path("email") String email);
 
-    @GET("/superapp/objects/search/byAlias/{alias}")
-    Call<List<ObjectBoundary>> getAllObjectsByPassword(@Path("alias") String type,
-                                                       @Query("size") int size,
-                                                       @Query("page") int page,
-                                                       @Query("superapp") String superapp,
-                                                       @Query("email") String email);
-
-
     @PUT("/superapp/users/{superapp}/{email}")
     Call<Void> updateUser(@Path("superapp") String superapp, @Path("email") String email, @Body UserBoundary update);
 
@@ -41,5 +33,14 @@ public interface UserService {
                                        @Path("superapp") String superapp,
                                        @Query("userSuperapp") String userSuperapp,
                                        @Query("userEmail") String userEmail);
+
+    @PUT("/superapp/objects/{superapp}/{id}")
+    Call<Void> updateObject(@Path("id") String id,
+                                       @Path("superapp") String superapp,
+                                       @Query("userSuperapp") String userSuperapp,
+                                       @Query("userEmail") String userEmail,
+                                        @Body ObjectBoundary objectBoundary);
+
+
 }
 

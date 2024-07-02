@@ -36,104 +36,43 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class DataManager {
-    private RetrofitClient database;
-    private BabysitterService babysitterService;
-    private ParentService parentService;
-    private EventService eventService;
-    private UserService userService;
+    private final BabysitterService babysitterService;
+    private final ParentService parentService;
+    private final EventService eventService;
+    private final UserService userService;
     private final String superapp = "2024b.yarden.cherry";
     private static String currentUserEmail = "";
 
     public DataManager() {
-        this.database = RetrofitClient.getInstance();
+        RetrofitClient database = RetrofitClient.getInstance();
         this.babysitterService = database.getClient().create(BabysitterService.class);
         this.parentService = database.getClient().create(ParentService.class);
         this.eventService = database.getClient().create(EventService.class);
         this.userService = database.getClient().create(UserService.class);
-
     }
 
     public void logout(OnLogoutListener listener) {
-        // Clear the current user email
         setCurrentUserEmail("");
-
-        // Notify the server about the logout if needed (optional)
-        // This step depends on your backend implementation.
-        // If your backend requires notification of logout, add a corresponding API call here.
-
         listener.onLogoutSuccess();
     }
 
-    public interface OnLogoutListener {
-        void onLogoutSuccess();
-
-        void onLogoutFailure(Exception exception);
-    }
-
     public void createUser(String email, User user, OnUserCreationListener listenerCreate, OnDataSavedListener listenerSave, OnUserUpdateListener listenerUpdate) {
-        NewUserBoundary newUser = new NewUserBoundary();
-        newUser.setEmail(email);
-        newUser.setRole(Role.SUPERAPP_USER);
-        newUser.setUsername(email);
-        newUser.setAvatar(user.getPassword());
-
+        NewUserBoundary newUser = createNewUserBoundary(email, Role.SUPERAPP_USER, email, user.getPassword());
         userService.createUser(newUser).enqueue(new Callback<UserBoundary>() {
             @Override
             public void onResponse(@NonNull Call<UserBoundary> call, @NonNull Response<UserBoundary> response) {
                 if (response.isSuccessful()) {
                     UserBoundary userBoundary = response.body();
-                    CreatedBy userId = new CreatedBy();
-                    userId.setUserId(userBoundary.getUserId());
-                    ObjectBoundary userData = user.toBoundary();
-                    //superapp = userData.getCreatedBy().getUserId().getSuperapp();
-                    userData.setCreatedBy(userId);
-                    userData.setAlias(user.getPassword());
-                    listenerCreate.onUserCreated(email);
-
-                    // Delay the user data creation by 4 seconds
-                    new Handler().postDelayed(() -> {
-                        userService.saveUserData(userData).enqueue(new Callback<ObjectBoundary>() {
-                            @Override
-                            public void onResponse(@NonNull Call<ObjectBoundary> call, @NonNull Response<ObjectBoundary> response) {
-                                if (response.isSuccessful()) {
-                                    listenerSave.onSuccess();
-                                    ObjectBoundary objectBoundary = response.body();
-                                    userBoundary.setUsername(objectBoundary.getObjectId().getId());
-                                    userBoundary.setRole(Role.MINIAPP_USER);
-
-                                    // Update user after another 4-second delay
-                                    new Handler().postDelayed(() -> {
-                                        userService.updateUser(userData.getCreatedBy().getUserId().getSuperapp(), email, userBoundary).enqueue(new Callback<Void>() {
-                                            @Override
-                                            public void onResponse(Call<Void> call, Response<Void> response) {
-                                                if (response.isSuccessful()) {
-                                                    listenerUpdate.onSuccess();
-                                                } else {
-                                                    listenerUpdate.onFailure(new Exception("Failed to update user: " + getErrorMessage(response)));
-                                                    logError(response, "updateUser");
-
-                                                }
-                                            }
-
-                                            @Override
-                                            public void onFailure(Call<Void> call, Throwable t) {
-                                                listenerUpdate.onFailure(new Exception("Failed to update user: " + t.getMessage()));
-                                                logError(response, "updateUser");
-                                            }
-                                        });
-                                    }, 10000); // 4-second delay
-                                } else {
-                                    logError(response, "saveUserData");
-                                    listenerSave.onFailure(new Exception("Failed to save user data"));
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(@NonNull Call<ObjectBoundary> call, Throwable t) {
-                                listenerSave.onFailure(new Exception("Failed to save user data: " + t.getMessage()));
-                            }
-                        });
-                    }, 4000); // 4-second delay
+                    if (userBoundary != null) {
+                        CreatedBy createdBy = new CreatedBy(new UserId(superapp, email));
+                        ObjectBoundary userData = user.toBoundary();
+                        userData.setCreatedBy(createdBy);
+                        userData.setAlias(user.getPassword());
+                        listenerCreate.onUserCreated(email);
+                        new Handler().postDelayed(() -> saveUserData(user, userData, userBoundary, listenerSave, listenerUpdate), 4000);
+                    } else {
+                        listenerCreate.onFailure(new Exception("Failed to create user: response body is null"));
+                    }
                 } else {
                     logError(response, "createUser");
                     listenerCreate.onFailure(new Exception("Failed to create user: " + getErrorMessage(response)));
@@ -141,53 +80,84 @@ public class DataManager {
             }
 
             @Override
-            public void onFailure(@NonNull Call<UserBoundary> call, Throwable t) {
+            public void onFailure(@NonNull Call<UserBoundary> call, @NonNull Throwable t) {
                 listenerCreate.onFailure(new Exception("Failed to create user: " + t.getMessage()));
                 Log.e("DataManager", "Error in createUser: " + t.getMessage());
             }
         });
     }
 
+    private void saveUserData(User user, ObjectBoundary userData, UserBoundary userBoundary, OnDataSavedListener listenerSave, OnUserUpdateListener listenerUpdate) {
+        userService.saveUserData(userData).enqueue(new Callback<ObjectBoundary>() {
+            @Override
+            public void onResponse(@NonNull Call<ObjectBoundary> call, @NonNull Response<ObjectBoundary> response) {
+                if (response.isSuccessful()) {
+                    listenerSave.onSuccess();
+                    userBoundary.setUsername(response.body().getObjectId().getId());
+                    userBoundary.setRole(Role.MINIAPP_USER);
+                    userData.getObjectDetails().put("uid", response.body().getObjectId().getId());
+                    new Handler().postDelayed(() -> updateUser(userBoundary, listenerUpdate), 10000);
+                    new Handler().postDelayed(() -> updateObject(userData, listenerUpdate), 10000);
+                } else {
+                    logError(response, "saveUserData");
+                    listenerSave.onFailure(new Exception("Failed to save user data"));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ObjectBoundary> call, @NonNull Throwable t) {
+                listenerSave.onFailure(new Exception("Failed to save user data: " + t.getMessage()));
+            }
+        });
+    }
+
+    private void updateUser(UserBoundary userBoundary, OnUserUpdateListener listenerUpdate) {
+        userService.updateUser(userBoundary.getUserId().getSuperapp(), userBoundary.getUserId().getEmail(), userBoundary).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) {
+                    listenerUpdate.onSuccess();
+                } else {
+                    logError(response, "updateUser");
+                    listenerUpdate.onFailure(new Exception("Failed to update user: " + getErrorMessage(response)));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                listenerUpdate.onFailure(new Exception("Failed to update user: " + t.getMessage()));
+            }
+        });
+    }
+
+    private void updateObject(ObjectBoundary  objectBoundary, OnUserUpdateListener listenerUpdate) {
+        userService.updateObject(objectBoundary.getObjectId().getId(),objectBoundary.getObjectId().getSuperapp(),objectBoundary.getObjectId().getSuperapp(), currentUserEmail, objectBoundary)
+                .enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) {
+                    listenerUpdate.onSuccess();
+                } else {
+                    logError(response, "updateUser");
+                    listenerUpdate.onFailure(new Exception("Failed to update user: " + getErrorMessage(response)));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                listenerUpdate.onFailure(new Exception("Failed to update user: " + t.getMessage()));
+            }
+        });
+    }
+
     public void loginUser(String email, String password, OnLoginListener listener) {
         setCurrentUserEmail(email);
-
         userService.getUserById(superapp, email).enqueue(new Callback<UserBoundary>() {
             @Override
             public void onResponse(Call<UserBoundary> call, Response<UserBoundary> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     UserBoundary user = response.body();
-
-                    userService.getObjectById(user.getUsername(), user.getUserId().getSuperapp(), superapp, email)
-                            .enqueue(new Callback<ObjectBoundary>() {
-                                @Override
-                                public void onResponse(Call<ObjectBoundary> call, Response<ObjectBoundary> response) {
-                                    if (response.isSuccessful() && response.body() != null) {
-                                        ObjectBoundary object = response.body();
-                                        if (object.getCreatedBy().getUserId().getEmail().equals(email) && object.getAlias().equals(password)) {
-                                            if (object.getType().equals(Babysitter.class.getName())) {
-                                                Babysitter babysitter = new Babysitter();
-                                                babysitter = babysitter.toBabysitter(new Gson().toJson(object, ObjectBoundary.class));
-                                                listener.onSuccess(babysitter);
-                                                return;
-                                            } else if (object.getType().equals(Parent.class.getName())) {
-                                                Parent parent = new Parent();
-                                                parent = parent.toParent(new Gson().toJson(object, ObjectBoundary.class));
-                                                listener.onSuccess(parent);
-                                                return;
-                                            }
-                                        }
-                                        listener.onFailure(new Exception("Incorrect password"));
-                                    } else {
-                                        listener.onFailure(new Exception("Password fetch failed"));
-                                    }
-                                }
-                                @Override
-                                public void onFailure(Call<ObjectBoundary> call, Throwable t) {
-                                    listener.onFailure(new Exception("Network error during password fetch"));
-
-                                }
-
-                            });
+                    fetchUserPassword(user, password, listener);
                 } else {
                     listener.onFailure(new Exception("User not found"));
                 }
@@ -195,26 +165,46 @@ public class DataManager {
 
             @Override
             public void onFailure(Call<UserBoundary> call, Throwable t) {
-                listener.onFailure(new Exception("Network error during user fetch"));
+                listener.onFailure(new Exception("Network error during user fetch: " + t.getMessage()));
             }
         });
     }
 
+    private void fetchUserPassword(UserBoundary user, String password, OnLoginListener listener) {
+        userService.getObjectById(user.getUsername(), superapp, user.getUserId().getSuperapp(), user.getUserId().getEmail()).enqueue(new Callback<ObjectBoundary>() {
+            @Override
+            public void onResponse(Call<ObjectBoundary> call, Response<ObjectBoundary> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ObjectBoundary object = response.body();
+                    if (object.getCreatedBy().getUserId().getEmail().equals(user.getUserId().getEmail()) && object.getAlias().equals(password)) {
+                        if (object.getType().equals(Babysitter.class.getName())) {
+                            Babysitter babysitter = new Gson().fromJson(new Gson().toJson(object.getObjectDetails()), Babysitter.class);
+                            listener.onSuccess(babysitter);
+                        } else if (object.getType().equals(Parent.class.getName())) {
+                            Parent parent = new Gson().fromJson(new Gson().toJson(object.getObjectDetails()), Parent.class);
+                            listener.onSuccess(parent);
+                        }
+                    } else {
+                        listener.onFailure(new Exception("Incorrect password"));
+                    }
+                } else {
+                    listener.onFailure(new Exception("Password fetch failed"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ObjectBoundary> call, Throwable t) {
+                listener.onFailure(new Exception("Network error during password fetch: " + t.getMessage()));
+            }
+        });
+    }
 
     public void loadAllBabysitters(OnBabysittersLoadedListener listener) {
-        Call<List<ObjectBoundary>> call = babysitterService.loadAllBabysitters(Babysitter.class.getName(), superapp, getCurrentUserEmail());
-        call.enqueue(new Callback<List<ObjectBoundary>>() {
+        babysitterService.loadAllBabysitters(Babysitter.class.getName(), superapp, getCurrentUserEmail()).enqueue(new Callback<List<ObjectBoundary>>() {
             @Override
             public void onResponse(Call<List<ObjectBoundary>> call, Response<List<ObjectBoundary>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    List<ObjectBoundary> allObjects = response.body();
-                    List<Babysitter> babysitters = new ArrayList<>();
-                    for (ObjectBoundary object : allObjects) {
-                        if (object.getType().equals(Babysitter.class.getName())) {
-                            Babysitter babysitter = new Gson().fromJson(new Gson().toJson(object.getObjectDetails()), Babysitter.class);
-                            babysitters.add(babysitter);
-                        }
-                    }
+                    List<Babysitter> babysitters = convertObjectBoundaryToBabysitters(response.body());
                     listener.onBabysittersLoaded(babysitters);
                 } else {
                     listener.onFailure(new Exception("Failed to load babysitters"));
@@ -223,14 +213,24 @@ public class DataManager {
 
             @Override
             public void onFailure(Call<List<ObjectBoundary>> call, Throwable t) {
-                listener.onFailure(new Exception(t));
+                listener.onFailure(new Exception("Failed to load babysitters: " + t.getMessage()));
             }
         });
     }
 
+    private List<Babysitter> convertObjectBoundaryToBabysitters(List<ObjectBoundary> objects) {
+        List<Babysitter> babysitters = new ArrayList<>();
+
+        for (ObjectBoundary object : objects) {
+            Babysitter babysitter = new Gson().fromJson(new Gson().toJson(object.getObjectDetails()), Babysitter.class);
+            babysitters.add(babysitter);
+        }
+
+        return babysitters;
+    }
+
     public void sortBabysittersByDistance(OnBabysittersLoadedListener listener) {
-        Call<UserBoundary> userCall = userService.getUserById(superapp, currentUserEmail);
-        userCall.enqueue(new Callback<UserBoundary>() {
+        userService.getUserById(superapp, currentUserEmail).enqueue(new Callback<UserBoundary>() {
             @Override
             public void onResponse(Call<UserBoundary> call, Response<UserBoundary> userResponse) {
                 if (userResponse.isSuccessful() && userResponse.body() != null) {
@@ -243,14 +243,13 @@ public class DataManager {
 
             @Override
             public void onFailure(Call<UserBoundary> call, Throwable t) {
-                listener.onFailure(new Exception("Failed to fetch user"));
+                listener.onFailure(new Exception("Failed to fetch user: " + t.getMessage()));
             }
         });
     }
 
     private void fetchUserLocation(UserBoundary user, OnBabysittersLoadedListener listener) {
-        Call<ObjectBoundary> objectCall = userService.getObjectById(user.getUsername(), superapp, user.getUserId().getSuperapp(), user.getUserId().getEmail());
-        objectCall.enqueue(new Callback<ObjectBoundary>() {
+        userService.getObjectById(user.getUsername(), superapp, user.getUserId().getSuperapp(), user.getUserId().getEmail()).enqueue(new Callback<ObjectBoundary>() {
             @Override
             public void onResponse(Call<ObjectBoundary> call, Response<ObjectBoundary> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -265,7 +264,7 @@ public class DataManager {
 
             @Override
             public void onFailure(Call<ObjectBoundary> call, Throwable t) {
-                listener.onFailure(new Exception("Failed to fetch user location"));
+                listener.onFailure(new Exception("Failed to fetch user location: " + t.getMessage()));
             }
         });
     }
@@ -277,14 +276,12 @@ public class DataManager {
                 "type", Babysitter.class.getName(),
                 "latitude", String.valueOf(latitude),
                 "longitude", String.valueOf(longitude));
-
         babysitterService.loadAllBabysittersByDistance(Babysitter.class.getName(), command)
                 .enqueue(new Callback<List<Object>>() {
                     @Override
                     public void onResponse(Call<List<Object>> call, Response<List<Object>> response) {
                         if (response.isSuccessful() && response.body() != null) {
-                            List<Object> objects = response.body();
-                            List<Babysitter> babysitters = convertObjectsToBabysitters(objects);
+                            List<Babysitter> babysitters = convertObjectsToBabysitters(response.body());
                             listener.onBabysittersLoaded(babysitters);
                         } else {
                             logError(response, "fetchBabysittersByDistance");
@@ -294,10 +291,11 @@ public class DataManager {
 
                     @Override
                     public void onFailure(Call<List<Object>> call, Throwable t) {
-                        listener.onFailure(new Exception(t));
+                        listener.onFailure(new Exception("Failed to load babysitters: " + t.getMessage()));
                     }
                 });
     }
+
 
     private List<Babysitter> convertObjectsToBabysitters(List<Object> objects) {
         List<Babysitter> babysitters = new ArrayList<>();
@@ -316,27 +314,14 @@ public class DataManager {
 
     public MiniAppCommandBoundary createCommand(String command, UserBoundary user, String... args) {
         MiniAppCommandBoundary miniappCommand = new MiniAppCommandBoundary();
-        miniappCommand.setCommandAttributes(new HashMap<>());
-        CommandId commandObj = new CommandId();
-        commandObj.setId("1");
-        commandObj.setSuperapp(user.getUserId().getSuperapp());
-        commandObj.setMiniapp(args[1]);
-        miniappCommand.setCommandId(commandObj);
+        CommandId commandId = new CommandId(user.getUserId().getSuperapp(), args[1], "1");
+        miniappCommand.setCommandId(commandId);
         miniappCommand.setCommand(command);
-        CreatedBy invokedBy = new CreatedBy();
-        invokedBy.setUserId(new UserId());
-        invokedBy.getUserId().setSuperapp(user.getUserId().getSuperapp());
-        invokedBy.getUserId().setEmail(user.getUserId().getEmail());
-        miniappCommand.setInvokedBy(invokedBy);
+        miniappCommand.setInvokedBy(new CreatedBy(new UserId(user.getUserId().getSuperapp(), user.getUserId().getEmail())));
+        miniappCommand.setTargetObject(new TargetObject(new ObjectId(user.getUserId().getSuperapp(), user.getUsername())));
+        miniappCommand.setCommandAttributes(new HashMap<>());
 
-        TargetObject target = new TargetObject();
-        target.setObjectId(new ObjectId());
-        target.getObjectId().setSuperapp(user.getUserId().getSuperapp());
-        target.getObjectId().setId(user.getUsername());
-        miniappCommand.setTargetObject(target);
-
-        // Process args as key-value pairs
-        if (args.length % 2 == 0) { // Ensure args are in pairs
+        if (args.length % 2 == 0) {
             for (int i = 0; i < args.length; i += 2) {
                 miniappCommand.getCommandAttributes().put(args[i], args[i + 1]);
             }
@@ -347,78 +332,261 @@ public class DataManager {
         return miniappCommand;
     }
 
-    public interface OnEventsLoadedListener {
-        void onEventsLoaded(List<BabysittingEvent> events);
+    public void createEvent(String message, String date, String babysitterId, OnDataSavedListener listenerSave) {
+        updateUserRole(currentUserEmail, Role.SUPERAPP_USER, new OnUserUpdateListener() {
+            @Override
+            public void onSuccess() {
+                userService.getUserById(superapp, currentUserEmail).enqueue(new Callback<UserBoundary>() {
+                    @Override
+                    public void onResponse(Call<UserBoundary> call, Response<UserBoundary> userResponse) {
+                        if (userResponse.isSuccessful() && userResponse.body() != null) {
+                            String parentId = userResponse.body().getUsername();
+                            BabysittingEvent babysittingEvent = createBabysittingEvent(message, date, babysitterId, parentId);
+                            ObjectBoundary objectBoundary = babysittingEvent.toBoundary();
+                            eventService.createEvent(objectBoundary).enqueue(new Callback<ObjectBoundary>() {
+                                @Override
+                                public void onResponse(@NonNull Call<ObjectBoundary> call, @NonNull Response<ObjectBoundary> response) {
+                                    if (response.isSuccessful() && response.body() != null) {
+                                        listenerSave.onSuccess();
+                                        updateUserRole(currentUserEmail, Role.MINIAPP_USER, new OnUserUpdateListener() {
+                                            @Override
+                                            public void onSuccess() {
+                                                Log.d("DataManager", "User role updated to MINIAPP_USER successfully");
+                                            }
 
-        void onFailure(Exception exception);
+                                            @Override
+                                            public void onFailure(Exception exception) {
+                                                Log.e("DataManager", "Failed to update user role to MINIAPP_USER: " + exception.getMessage());
+                                            }
+                                        });
+                                        Log.d("DataManager", "Event saved successfully");
+                                    } else {
+                                        logError(response, "createEvent");
+                                        listenerSave.onFailure(new Exception("Failed to save event data"));
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(@NonNull Call<ObjectBoundary> call, @NonNull Throwable t) {
+                                    listenerSave.onFailure(new Exception("Failed to save event data: " + t.getMessage()));
+                                }
+                            });
+                        } else {
+                            listenerSave.onFailure(new Exception("Failed to fetch parent ID"));
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<UserBoundary> call, Throwable t) {
+                        listenerSave.onFailure(new Exception("Network error during parent ID fetch: " + t.getMessage()));
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+                Log.e("DataManager", "Failed to update user role to SUPERAPP_USER: " + exception.getMessage());
+            }
+        });
     }
 
-    public interface OnBabysittersSortedListener {
-        void onSorted(List<Babysitter> sortedBabysitters);
+    private BabysittingEvent createBabysittingEvent(String message, String date, String babysitterId, String parentId) {
+        BabysittingEvent babysittingEvent = new BabysittingEvent();
 
-        void onFailure(Exception exception);
+        babysittingEvent.setMessageId(message);
+        babysittingEvent.setMessageText(message);
+        babysittingEvent.setBabysitterUid(babysitterId);
+        babysittingEvent.setSelectedDate(date);
+        babysittingEvent.setMailParent(parentId);
+        babysittingEvent.setStatus(false);
+        babysittingEvent.setParentUid(parentId);
+
+        return babysittingEvent;
     }
 
-    public interface OnBabysittersLoadedListener {
-        void onBabysittersLoaded(List<Babysitter> babysitters);
+    public void loadAllEvents(OnEventsLoadedListener listener) {
+        updateUserRole(currentUserEmail, Role.MINIAPP_USER, new OnUserUpdateListener() {
+            @Override
+            public void onSuccess() {
+                userService.getUserById(superapp, currentUserEmail).
+                        enqueue(new Callback<UserBoundary>() {
+                            @Override
+                            public void onResponse
+                                    (Call<UserBoundary> call, Response<UserBoundary> response) {
+                                if (response.isSuccessful() && response.body() != null) {
+                                    MiniAppCommandBoundary command = createCommand(
+                                            "GetAllObjectsByTypeAndAliasAndActive", response.body(),
+                                            "type", BabysittingEvent.class.getName(),
+                                            "alias", response.body().getUsername());
+                                    eventService.loadAllBabysittingEvents(BabysittingEvent.class.getName(), command)
+                                            .enqueue(new Callback<List<Object>>() {
+                                                @Override
+                                                public void onResponse(Call<List<Object>> call, Response<List<Object>> response) {
+                                                    if (response.isSuccessful() && response.body() != null) {
+                                                        List<BabysittingEvent> events = convertObjectsToEvents(response.body());
+                                                        listener.onEventsLoaded(events);
+                                                    } else {
+                                                        listener.onFailure(new Exception("Failed to load messages"));
+                                                    }
+                                                }
 
-        void onFailure(Exception exception);
-    }
+                                                @Override
+                                                public void onFailure(Call<List<Object>> call, Throwable t) {
+                                                    listener.onFailure(new Exception("Failed to load messages: " + t.getMessage()));
+                                                }
+                                            });
 
+                                } else {
+                                    logError(response, "createEvent");
+                                    listener.onFailure(new Exception("Failed to save event data"));
+                                }
+                            }
 
-    public void setCurrentUserEmail(String email) {
-        this.currentUserEmail = email;
-    }
+                            @Override
+                            public void onFailure(Call<UserBoundary> call, Throwable t) {
+                                listener.onFailure(new Exception("Network error during parent ID fetch: " + t.getMessage()));
+                            }
+                        });
+            }
+                @Override
+                public void onFailure (Exception exception){
+                    Log.e("DataManager", "Failed to update user role to SUPERAPP_USER: " + exception.getMessage());
+                }
+            });
+        }
 
-    public String getSuperapp() {
-        return superapp;
-    }
+        private List<BabysittingEvent> convertObjectsToEvents (List < Object > objects) {
+            List<BabysittingEvent> events = new ArrayList<>();
+            String json = new Gson().toJson(objects);
+            ArrayList<ObjectBoundary> allObjects = new Gson().fromJson(json, new TypeToken<ArrayList<ObjectBoundary>>() {
+            }.getType());
 
-    public String getCurrentUserEmail() {
-        return currentUserEmail;
-    }
+            for (Object object : allObjects) {
+                ObjectBoundary objectBoundary = new Gson().fromJson(new Gson().toJson(object), ObjectBoundary.class);
+                BabysittingEvent event = new Gson().fromJson(new Gson().toJson(objectBoundary.getObjectDetails()), BabysittingEvent.class);
+                events.add(event);
+            }
 
+            return events;
+        }
 
-    private String getErrorMessage(Response<?> response) {
-        try {
-            return response.errorBody() != null ? response.errorBody().string() : "Unknown error";
-        } catch (Exception e) {
-            return "Could not read error body";
+        private void updateUserRole (String email, Role role, OnUserUpdateListener listener){
+            userService.getUserById(superapp, email).enqueue(new Callback<UserBoundary>() {
+                @Override
+                public void onResponse(@NonNull Call<UserBoundary> call, @NonNull Response<UserBoundary> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        UserBoundary userBoundary = response.body();
+                        userBoundary.setRole(role);
+                        userService.updateUser(userBoundary.getUserId().getSuperapp(), email, userBoundary).enqueue(new Callback<Void>() {
+                            @Override
+                            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                                if (response.isSuccessful()) {
+                                    listener.onSuccess();
+                                } else {
+                                    listener.onFailure(new Exception("Failed to update user role: " + getErrorMessage(response)));
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                                listener.onFailure(new Exception("Failed to update user role: " + t.getMessage()));
+                            }
+                        });
+                    } else {
+                        listener.onFailure(new Exception("Failed to fetch user for role update: " + getErrorMessage(response)));
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<UserBoundary> call, @NonNull Throwable t) {
+                    listener.onFailure(new Exception("Network error during role update: " + t.getMessage()));
+                }
+            });
+        }
+
+        private NewUserBoundary createNewUserBoundary (String email, Role role, String
+        userName, String avatar){
+            NewUserBoundary user = new NewUserBoundary();
+            user.setEmail(email);
+            user.setRole(role);
+            user.setUsername(userName);
+            user.setAvatar(avatar);
+            return user;
+        }
+
+        public void setCurrentUserEmail (String email){
+            currentUserEmail = email;
+        }
+
+        public String getSuperapp () {
+            return superapp;
+        }
+
+        public String getCurrentUserEmail () {
+            return currentUserEmail;
+        }
+
+        private String getErrorMessage (Response < ? > response){
+            try {
+                return response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+            } catch (Exception e) {
+                return "Could not read error body";
+            }
+        }
+
+        private void logError (Response < ? > response, String methodName){
+            try {
+                Log.e("DataManager", "Error in " + methodName + ": " + response.errorBody().string() + " | HTTP Status Code: " + response.code());
+            } catch (Exception e) {
+                Log.e("DataManager", "Error in " + methodName + ": Could not read error body", e);
+            }
+        }
+
+        public interface OnLogoutListener {
+            void onLogoutSuccess();
+
+            void onLogoutFailure(Exception exception);
+        }
+
+        public interface OnUserCreationListener {
+            void onUserCreated(String email);
+
+            void onFailure(Exception exception);
+        }
+
+        public interface OnDataSavedListener {
+            void onSuccess();
+
+            void onFailure(Exception exception);
+        }
+
+        public interface OnUserUpdateListener {
+            void onSuccess();
+
+            void onFailure(Exception exception);
+        }
+
+        public interface OnLoginListener {
+            void onSuccess(User user);
+
+            void onFailure(Exception exception);
+        }
+
+        public interface OnBabysittersLoadedListener {
+            void onBabysittersLoaded(List<Babysitter> babysitters);
+
+            void onFailure(Exception exception);
+        }
+
+        public interface OnEventsLoadedListener {
+            void onEventsLoaded(List<BabysittingEvent> events);
+
+            void onFailure(Exception exception);
+        }
+
+        public interface OnBabysittersSortedListener {
+            void onSorted(List<Babysitter> sortedBabysitters);
+
+            void onFailure(Exception exception);
         }
     }
-
-    public interface OnLoginListener {
-        void onSuccess(User user);
-
-        void onFailure(Exception exception);
-    }
-
-    private void logError(Response<?> response, String methodName) {
-        try {
-            Log.e("DataManager", "Error in " + methodName + ": " + response.errorBody().string() + " | HTTP Status Code: " + response.code());
-        } catch (Exception e) {
-            Log.e("DataManager", "Error in " + methodName + ": Could not read error body", e);
-        }
-    }
-
-
-    public interface OnUserCreationListener {
-        void onUserCreated(String email);
-
-        void onFailure(Exception exception);
-    }
-
-    public interface OnDataSavedListener {
-        void onSuccess();
-
-        void onFailure(Exception exception);
-    }
-
-    public interface OnUserUpdateListener {
-        void onSuccess();
-
-        void onFailure(Exception exception);
-    }
-
-
-}

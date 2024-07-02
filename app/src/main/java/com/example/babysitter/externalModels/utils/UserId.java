@@ -8,6 +8,11 @@ public class UserId {
     public UserId() {
     }
 
+    public UserId(String superapp, String email) {
+        this.superapp = superapp;
+        this.email = email;
+    }
+
     public String getEmail() {
         return this.email;
     }

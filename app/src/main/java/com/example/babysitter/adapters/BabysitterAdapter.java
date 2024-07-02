@@ -14,12 +14,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.babysitter.models.Babysitter;
-import com.example.babysitter.models.BabysittingEvent;
 import com.example.babysitter.R;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.example.babysitter.models.Babysitter;
+import com.example.babysitter.repositories.DataManager;
 
 import java.util.Calendar;
 import java.util.List;
@@ -27,11 +24,12 @@ import java.util.List;
 public class BabysitterAdapter extends RecyclerView.Adapter<BabysitterAdapter.BabysitterViewHolder> {
     private List<Babysitter> babysitters;
     private Context context;
+    private DataManager dataManager;
 
-
-    public BabysitterAdapter(List<Babysitter> babysitters, Context context) {
+    public BabysitterAdapter(List<Babysitter> babysitters, Context context, DataManager dataManager) {
         this.babysitters = babysitters;
         this.context = context;
+        this.dataManager = dataManager;
     }
 
     @NonNull
@@ -85,28 +83,27 @@ public class BabysitterAdapter extends RecyclerView.Adapter<BabysitterAdapter.Ba
                     Toast.makeText(context, "Message or Date is empty", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 String babysitterUID = babysitter.getUid();
-                String parentUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                String mailParent = FirebaseAuth.getInstance().getCurrentUser().getEmail();
-                BabysittingEvent babysittingEvent = new BabysittingEvent(parentUID, babysitterUID, messageText, selectedDate, mailParent);
-                DatabaseReference messagesRef = FirebaseDatabase.getInstance().getReference().child("Messages").push();
-                babysittingEvent.setMessageId(messagesRef.getKey());
-                messagesRef.setValue(babysittingEvent)
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(context, "Message sent successfully", Toast.LENGTH_SHORT).show();
-                            holder.messageEditText.setVisibility(View.GONE);
-                            holder.showDatePickerButton.setVisibility(View.GONE);
-                            holder.btnSendMessage.setVisibility(View.GONE);
-                            holder.tvSelectedDate.setVisibility(View.GONE);
-                            holder.tvSelectedDate.setText("Message sent successfully");
-                            holder.tvSelectedDate.setTypeface(null, Typeface.BOLD);
-                            holder.tvSelectedDate.setVisibility(View.VISIBLE);
-                        })
-                        .addOnFailureListener(e -> Toast.makeText(context, "Failed to send message", Toast.LENGTH_SHORT).show());
+                dataManager.createEvent(messageText, selectedDate, babysitterUID, new DataManager.OnDataSavedListener() {
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(context, "Message sent successfully", Toast.LENGTH_SHORT).show();
+                        holder.messageEditText.setVisibility(View.GONE);
+                        holder.showDatePickerButton.setVisibility(View.GONE);
+                        holder.btnSendMessage.setVisibility(View.GONE);
+                        holder.tvSelectedDate.setVisibility(View.GONE);
+                        holder.tvSelectedDate.setText("Message sent successfully");
+                        holder.tvSelectedDate.setTypeface(null, Typeface.BOLD);
+                        holder.tvSelectedDate.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onFailure(Exception exception) {
+                        Toast.makeText(context, "Failed to send message", Toast.LENGTH_SHORT).show();
+                    }
+                });
             });
         });
-
     }
 
     @Override
@@ -133,10 +130,8 @@ public class BabysitterAdapter extends RecyclerView.Adapter<BabysitterAdapter.Ba
             tvBabysitterExperience = itemView.findViewById(R.id.tvBabysitterExperience);
             messageEditText = itemView.findViewById(R.id.messageEditText);
             showDatePickerButton = itemView.findViewById(R.id.showDatePickerButton);
-            tvSelectedDate = itemView.findViewById((R.id.tvSelectedDate));
+            tvSelectedDate = itemView.findViewById(R.id.tvSelectedDate);
             btnSendMessage = itemView.findViewById(R.id.btnSendMessage);
         }
-
-
     }
 }

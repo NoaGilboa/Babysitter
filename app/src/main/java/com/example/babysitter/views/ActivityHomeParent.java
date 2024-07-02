@@ -35,7 +35,7 @@ public class ActivityHomeParent extends AppCompatActivity {
         recyclerView = findViewById(R.id.rvBabysitters);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         babysitters = new ArrayList<>();
-        adapter = new BabysitterAdapter(babysitters, this);
+        adapter = new BabysitterAdapter(babysitters, this, dataManager);
         recyclerView.setAdapter(adapter);
 
         loadBabysitters();
@@ -49,7 +49,6 @@ public class ActivityHomeParent extends AppCompatActivity {
                     startActivity(intent);
                     finish();
                 }
-
                 @Override
                 public void onLogoutFailure(Exception exception) {
                     Toast.makeText(ActivityHomeParent.this, "Logout failed: " + exception.getMessage(), Toast.LENGTH_SHORT).show();

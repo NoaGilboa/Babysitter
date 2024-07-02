@@ -6,9 +6,11 @@ public class CommandId {
     private String miniapp;
     private String id;
 
-    public CommandId() {
+    public CommandId(String superapp, String miniapp, String id) {
+        this.superapp = superapp;
+        this.miniapp = miniapp;
+        this.id = id;
     }
-
 
     public String getSuperapp() {
         return superapp;

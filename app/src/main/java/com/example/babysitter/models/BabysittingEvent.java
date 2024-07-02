@@ -48,6 +48,10 @@ public class BabysittingEvent {
         return this;
     }
 
+    public void setBabysitterUid(String babysitterUid) {
+        this.babysitterUid = babysitterUid;
+    }
+
     public String getBabysitterUid() {
         return babysitterUid;
     }
@@ -86,7 +90,7 @@ public class BabysittingEvent {
     public ObjectBoundary toBoundary() {
         ObjectBoundary objectBoundary = new ObjectBoundary();
         objectBoundary.setType(this.getClass().toString());
-        objectBoundary.setAlias(this.getMessageText());
+        objectBoundary.setAlias(this.getBabysitterUid());
         objectBoundary.setLocation(new Location(0,0));
         objectBoundary.setActive(true);
         CreatedBy user=new CreatedBy();

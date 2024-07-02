@@ -7,6 +7,11 @@ public class ObjectId {
     public ObjectId() {
     }
 
+    public ObjectId(String superapp, String id) {
+        this.superapp = superapp;
+        this.id = id;
+    }
+
     public String getSuperapp() {
         return this.superapp;
     }

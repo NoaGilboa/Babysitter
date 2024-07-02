@@ -3,6 +3,7 @@ package com.example.babysitter.views;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -33,7 +34,6 @@ public class ActivityHomeBabysitter extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_babysiter);
 
-        //userManager = new UserManager();
         dataManager = new DataManager();
 
         recyclerView = findViewById(R.id.rvParents);
@@ -42,12 +42,22 @@ public class ActivityHomeBabysitter extends AppCompatActivity {
         adapter = new ParentAdapter(events, this);
         recyclerView.setAdapter(adapter);
 
-        // loadEvents();
+        loadEvents();
 
         findViewById(R.id.btnLogout).setOnClickListener(v -> {
-            //userManager.logOutUser();
-            startActivity(new Intent(this, ActivityLogin.class));
-            finish();
+            dataManager.logout(new DataManager.OnLogoutListener() {
+                @Override
+                public void onLogoutSuccess() {
+                    Toast.makeText(ActivityHomeBabysitter.this, "Logout successful", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(ActivityHomeBabysitter.this, ActivityLogin.class);
+                    startActivity(intent);
+                    finish();
+                }
+                @Override
+                public void onLogoutFailure(Exception exception) {
+                    Toast.makeText(ActivityHomeBabysitter.this, "Logout failed: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         findViewById(R.id.btnSettings).setOnClickListener(v -> startActivity(new Intent(this, ActivitySetting.class)));
@@ -56,26 +66,22 @@ public class ActivityHomeBabysitter extends AppCompatActivity {
         findViewById(R.id.btnSortByNewerToOlder).setOnClickListener(v -> sortEvents(false));
     }
 
-//    private void loadEvents() {
-//        if (userManager.isUserLoggedIn()) {
-//            String currentUserId = userManager.getCurrentUserId();
-//            dataManager.loadBabysittingEvents(currentUserId, new FirebaseDataManager.OnEventsLoadedListener() {
-//                @Override
-//                public void onEventsLoaded(List<BabysittingEvent> loadedEvents) {
-//                    events.clear();
-//                    events.addAll(loadedEvents);
-//                    adapter.notifyDataSetChanged();
-//                }
-//
-//                @Override
-//                public void onFailure(Exception exception) {
-//                    Log.e("HomeBabysitter", "Failed to load events: " + exception.getMessage());
-//                }
-//            });
-//        } else {
-//            Log.e("HomeBabysitter", "No user logged in");
-//        }
-//    }
+    private void loadEvents() {
+            dataManager.loadAllEvents(new DataManager.OnEventsLoadedListener() {
+                @Override
+                public void onEventsLoaded(List<BabysittingEvent> loadedEvents) {
+                    events.clear();
+                    events.addAll(loadedEvents);
+                    adapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onFailure(Exception exception) {
+                    Log.e("HomeBabysitter", "Failed to load events: " + exception.getMessage());
+                }
+            });
+
+    }
 
     private void sortEvents(boolean olderToNewer) {
         if (events != null && !events.isEmpty()) {
