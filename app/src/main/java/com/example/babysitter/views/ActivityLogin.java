@@ -21,9 +21,9 @@ import com.google.gson.Gson;
 
 public class ActivityLogin extends AppCompatActivity {
 
-    ActivityLoginBinding binding;
-    ProgressDialog progressDialog;
-    DataManager dataManager;
+    private ActivityLoginBinding binding;
+    private ProgressDialog progressDialog;
+    private DataManager dataManager;
     private Gson gson = new Gson();
     private UserService userService;
     private ParentService parentService;

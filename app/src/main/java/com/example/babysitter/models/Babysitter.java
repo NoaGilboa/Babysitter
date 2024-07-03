@@ -100,7 +100,7 @@ public class Babysitter extends User {
 
     public ObjectBoundary toBoundary() {
         ObjectBoundary objectBoundary = new ObjectBoundary();
-        objectBoundary.setType(this.getClass().getName());
+        objectBoundary.setType(this.getClass().getSimpleName());
         objectBoundary.setAlias(this.getPassword());
         objectBoundary.setLocation(new Location(this.getLatitude(),this.getLongitude()));
         objectBoundary.setActive(true);

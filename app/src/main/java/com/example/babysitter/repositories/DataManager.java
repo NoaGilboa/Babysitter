@@ -130,24 +130,24 @@ public class DataManager {
         });
     }
 
-    private void updateObject(ObjectBoundary  objectBoundary, OnUserUpdateListener listenerUpdate) {
-        userService.updateObject(objectBoundary.getObjectId().getId(),objectBoundary.getObjectId().getSuperapp(),objectBoundary.getObjectId().getSuperapp(), currentUserEmail, objectBoundary)
+    private void updateObject(ObjectBoundary objectBoundary, OnUserUpdateListener listenerUpdate) {
+        userService.updateObject(objectBoundary.getObjectId().getId(), objectBoundary.getObjectId().getSuperapp(), objectBoundary.getObjectId().getSuperapp(), currentUserEmail, objectBoundary)
                 .enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                if (response.isSuccessful()) {
-                    listenerUpdate.onSuccess();
-                } else {
-                    logError(response, "updateUser");
-                    listenerUpdate.onFailure(new Exception("Failed to update user: " + getErrorMessage(response)));
-                }
-            }
+                    @Override
+                    public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                        if (response.isSuccessful()) {
+                            listenerUpdate.onSuccess();
+                        } else {
+                            logError(response, "updateUser");
+                            listenerUpdate.onFailure(new Exception("Failed to update user: " + getErrorMessage(response)));
+                        }
+                    }
 
-            @Override
-            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                listenerUpdate.onFailure(new Exception("Failed to update user: " + t.getMessage()));
-            }
-        });
+                    @Override
+                    public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                        listenerUpdate.onFailure(new Exception("Failed to update user: " + t.getMessage()));
+                    }
+                });
     }
 
     public void loginUser(String email, String password, OnLoginListener listener) {
@@ -177,10 +177,10 @@ public class DataManager {
                 if (response.isSuccessful() && response.body() != null) {
                     ObjectBoundary object = response.body();
                     if (object.getCreatedBy().getUserId().getEmail().equals(user.getUserId().getEmail()) && object.getAlias().equals(password)) {
-                        if (object.getType().equals(Babysitter.class.getName())) {
+                        if (object.getType().equals(Babysitter.class.getSimpleName())) {
                             Babysitter babysitter = new Gson().fromJson(new Gson().toJson(object.getObjectDetails()), Babysitter.class);
                             listener.onSuccess(babysitter);
-                        } else if (object.getType().equals(Parent.class.getName())) {
+                        } else if (object.getType().equals(Parent.class.getSimpleName())) {
                             Parent parent = new Gson().fromJson(new Gson().toJson(object.getObjectDetails()), Parent.class);
                             listener.onSuccess(parent);
                         }
@@ -200,7 +200,7 @@ public class DataManager {
     }
 
     public void loadAllBabysitters(OnBabysittersLoadedListener listener) {
-        babysitterService.loadAllBabysitters(Babysitter.class.getName(), superapp, getCurrentUserEmail()).enqueue(new Callback<List<ObjectBoundary>>() {
+        babysitterService.loadAllBabysitters(Babysitter.class.getSimpleName(), superapp, getCurrentUserEmail()).enqueue(new Callback<List<ObjectBoundary>>() {
             @Override
             public void onResponse(Call<List<ObjectBoundary>> call, Response<List<ObjectBoundary>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -273,10 +273,10 @@ public class DataManager {
         MiniAppCommandBoundary command = createCommand(
                 "GetAllObjectsByTypeAndLocationAndActive",
                 user,
-                "type", Babysitter.class.getName(),
+                "type", Babysitter.class.getSimpleName(),
                 "latitude", String.valueOf(latitude),
                 "longitude", String.valueOf(longitude));
-        babysitterService.loadAllBabysittersByDistance(Babysitter.class.getName(), command)
+        babysitterService.loadAllBabysittersByDistance(Babysitter.class.getSimpleName(), command)
                 .enqueue(new Callback<List<Object>>() {
                     @Override
                     public void onResponse(Call<List<Object>> call, Response<List<Object>> response) {
@@ -324,6 +324,7 @@ public class DataManager {
         if (args.length % 2 == 0) {
             for (int i = 0; i < args.length; i += 2) {
                 miniappCommand.getCommandAttributes().put(args[i], args[i + 1]);
+                Log.d("DataManager", "Command attribute: " + args[i] + " = " + args[i + 1]);
             }
         } else {
             throw new IllegalArgumentException("Args should be key-value pairs");
@@ -343,10 +344,13 @@ public class DataManager {
                             String parentId = userResponse.body().getUsername();
                             BabysittingEvent babysittingEvent = createBabysittingEvent(message, date, babysitterId, parentId);
                             ObjectBoundary objectBoundary = babysittingEvent.toBoundary();
+                            objectBoundary.getCreatedBy().getUserId().setSuperapp(superapp);
+                            Log.d("DataManager", "Event: " + objectBoundary);
                             eventService.createEvent(objectBoundary).enqueue(new Callback<ObjectBoundary>() {
                                 @Override
                                 public void onResponse(@NonNull Call<ObjectBoundary> call, @NonNull Response<ObjectBoundary> response) {
                                     if (response.isSuccessful() && response.body() != null) {
+                                        Log.d("DataManager", "Event saved successfully: " + response.body());
                                         listenerSave.onSuccess();
                                         updateUserRole(currentUserEmail, Role.MINIAPP_USER, new OnUserUpdateListener() {
                                             @Override
@@ -369,10 +373,12 @@ public class DataManager {
                                 @Override
                                 public void onFailure(@NonNull Call<ObjectBoundary> call, @NonNull Throwable t) {
                                     listenerSave.onFailure(new Exception("Failed to save event data: " + t.getMessage()));
+                                    Log.e("DataManager", "Failed to save event data: " + t.getMessage());
                                 }
                             });
                         } else {
                             listenerSave.onFailure(new Exception("Failed to fetch parent ID"));
+                            Log.e("DataManager", "Failed to fetch parent ID");
                         }
                     }
 
@@ -397,7 +403,7 @@ public class DataManager {
         babysittingEvent.setMessageText(message);
         babysittingEvent.setBabysitterUid(babysitterId);
         babysittingEvent.setSelectedDate(date);
-        babysittingEvent.setMailParent(parentId);
+        babysittingEvent.setMailParent(currentUserEmail);
         babysittingEvent.setStatus(false);
         babysittingEvent.setParentUid(parentId);
 
@@ -416,9 +422,10 @@ public class DataManager {
                                 if (response.isSuccessful() && response.body() != null) {
                                     MiniAppCommandBoundary command = createCommand(
                                             "GetAllObjectsByTypeAndAliasAndActive", response.body(),
-                                            "type", BabysittingEvent.class.getName(),
+                                            "type", BabysittingEvent.class.getSimpleName(),
                                             "alias", response.body().getUsername());
-                                    eventService.loadAllBabysittingEvents(BabysittingEvent.class.getName(), command)
+
+                                    eventService.loadAllBabysittingEvents(BabysittingEvent.class.getSimpleName(), command)
                                             .enqueue(new Callback<List<Object>>() {
                                                 @Override
                                                 public void onResponse(Call<List<Object>> call, Response<List<Object>> response) {
@@ -448,145 +455,172 @@ public class DataManager {
                             }
                         });
             }
-                @Override
-                public void onFailure (Exception exception){
-                    Log.e("DataManager", "Failed to update user role to SUPERAPP_USER: " + exception.getMessage());
-                }
-            });
+
+            @Override
+            public void onFailure(Exception exception) {
+                Log.e("DataManager", "Failed to update user role to SUPERAPP_USER: " + exception.getMessage());
+            }
+        });
+    }
+
+    private List<BabysittingEvent> convertObjectsToEvents(List<Object> objects) {
+        List<BabysittingEvent> events = new ArrayList<>();
+        String json = new Gson().toJson(objects);
+        ArrayList<ObjectBoundary> allObjects = new Gson().fromJson(json, new TypeToken<ArrayList<ObjectBoundary>>() {
+        }.getType());
+
+        for (Object object : allObjects) {
+            ObjectBoundary objectBoundary = new Gson().fromJson(new Gson().toJson(object), ObjectBoundary.class);
+            BabysittingEvent event = new Gson().fromJson(new Gson().toJson(objectBoundary.getObjectDetails()), BabysittingEvent.class);
+            events.add(event);
+            Log.d("DataManager", "Event: " + event);
         }
 
-        private List<BabysittingEvent> convertObjectsToEvents (List < Object > objects) {
-            List<BabysittingEvent> events = new ArrayList<>();
-            String json = new Gson().toJson(objects);
-            ArrayList<ObjectBoundary> allObjects = new Gson().fromJson(json, new TypeToken<ArrayList<ObjectBoundary>>() {
-            }.getType());
+        return events;
+    }
 
-            for (Object object : allObjects) {
-                ObjectBoundary objectBoundary = new Gson().fromJson(new Gson().toJson(object), ObjectBoundary.class);
-                BabysittingEvent event = new Gson().fromJson(new Gson().toJson(objectBoundary.getObjectDetails()), BabysittingEvent.class);
-                events.add(event);
+    private void updateUserRole(String email, Role role, OnUserUpdateListener listener) {
+        userService.getUserById(superapp, email).enqueue(new Callback<UserBoundary>() {
+            @Override
+            public void onResponse(@NonNull Call<UserBoundary> call, @NonNull Response<UserBoundary> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    UserBoundary userBoundary = response.body();
+                    userBoundary.setRole(role);
+                    userService.updateUser(userBoundary.getUserId().getSuperapp(), email, userBoundary).enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                            if (response.isSuccessful()) {
+                                listener.onSuccess();
+                            } else {
+                                listener.onFailure(new Exception("Failed to update user role: " + getErrorMessage(response)));
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                            listener.onFailure(new Exception("Failed to update user role: " + t.getMessage()));
+                        }
+                    });
+                } else {
+                    listener.onFailure(new Exception("Failed to fetch user for role update: " + getErrorMessage(response)));
+                }
             }
 
-            return events;
-        }
+            @Override
+            public void onFailure(@NonNull Call<UserBoundary> call, @NonNull Throwable t) {
+                listener.onFailure(new Exception("Network error during role update: " + t.getMessage()));
+            }
+        });
+    }
 
-        private void updateUserRole (String email, Role role, OnUserUpdateListener listener){
-            userService.getUserById(superapp, email).enqueue(new Callback<UserBoundary>() {
-                @Override
-                public void onResponse(@NonNull Call<UserBoundary> call, @NonNull Response<UserBoundary> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        UserBoundary userBoundary = response.body();
-                        userBoundary.setRole(role);
-                        userService.updateUser(userBoundary.getUserId().getSuperapp(), email, userBoundary).enqueue(new Callback<Void>() {
-                            @Override
-                            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                                if (response.isSuccessful()) {
-                                    listener.onSuccess();
-                                } else {
-                                    listener.onFailure(new Exception("Failed to update user role: " + getErrorMessage(response)));
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                                listener.onFailure(new Exception("Failed to update user role: " + t.getMessage()));
-                            }
-                        });
-                    } else {
-                        listener.onFailure(new Exception("Failed to fetch user for role update: " + getErrorMessage(response)));
+    public void getParent(String parentId, OnParentLoadedListener listener) {
+        userService.getObjectById(parentId, superapp, superapp, currentUserEmail)
+                .enqueue(new Callback<ObjectBoundary>() {
+                    @Override
+                    public void onResponse(Call<ObjectBoundary> call, Response<ObjectBoundary> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            Parent parent = new Gson().fromJson(new Gson().toJson(response.body().getObjectDetails()), Parent.class);
+                            listener.onParentLoaded(parent);
+                        } else {
+                            listener.onFailure(new Exception("Failed to fetch parent data"));
+                        }
                     }
-                }
+                    @Override
+                    public void onFailure(Call<ObjectBoundary> call, Throwable t) {
+                        listener.onFailure(new Exception("Failed to fetch parent data: " + t.getMessage()));
+                    }
+                });
+    }
 
-                @Override
-                public void onFailure(@NonNull Call<UserBoundary> call, @NonNull Throwable t) {
-                    listener.onFailure(new Exception("Network error during role update: " + t.getMessage()));
-                }
-            });
-        }
+    private NewUserBoundary createNewUserBoundary(String email, Role role, String
+            userName, String avatar) {
+        NewUserBoundary user = new NewUserBoundary();
+        user.setEmail(email);
+        user.setRole(role);
+        user.setUsername(userName);
+        user.setAvatar(avatar);
+        return user;
+    }
 
-        private NewUserBoundary createNewUserBoundary (String email, Role role, String
-        userName, String avatar){
-            NewUserBoundary user = new NewUserBoundary();
-            user.setEmail(email);
-            user.setRole(role);
-            user.setUsername(userName);
-            user.setAvatar(avatar);
-            return user;
-        }
+    public void setCurrentUserEmail(String email) {
+        currentUserEmail = email;
+    }
 
-        public void setCurrentUserEmail (String email){
-            currentUserEmail = email;
-        }
+    public String getSuperapp() {
+        return superapp;
+    }
 
-        public String getSuperapp () {
-            return superapp;
-        }
+    public String getCurrentUserEmail() {
+        return currentUserEmail;
+    }
 
-        public String getCurrentUserEmail () {
-            return currentUserEmail;
-        }
-
-        private String getErrorMessage (Response < ? > response){
-            try {
-                return response.errorBody() != null ? response.errorBody().string() : "Unknown error";
-            } catch (Exception e) {
-                return "Could not read error body";
-            }
-        }
-
-        private void logError (Response < ? > response, String methodName){
-            try {
-                Log.e("DataManager", "Error in " + methodName + ": " + response.errorBody().string() + " | HTTP Status Code: " + response.code());
-            } catch (Exception e) {
-                Log.e("DataManager", "Error in " + methodName + ": Could not read error body", e);
-            }
-        }
-
-        public interface OnLogoutListener {
-            void onLogoutSuccess();
-
-            void onLogoutFailure(Exception exception);
-        }
-
-        public interface OnUserCreationListener {
-            void onUserCreated(String email);
-
-            void onFailure(Exception exception);
-        }
-
-        public interface OnDataSavedListener {
-            void onSuccess();
-
-            void onFailure(Exception exception);
-        }
-
-        public interface OnUserUpdateListener {
-            void onSuccess();
-
-            void onFailure(Exception exception);
-        }
-
-        public interface OnLoginListener {
-            void onSuccess(User user);
-
-            void onFailure(Exception exception);
-        }
-
-        public interface OnBabysittersLoadedListener {
-            void onBabysittersLoaded(List<Babysitter> babysitters);
-
-            void onFailure(Exception exception);
-        }
-
-        public interface OnEventsLoadedListener {
-            void onEventsLoaded(List<BabysittingEvent> events);
-
-            void onFailure(Exception exception);
-        }
-
-        public interface OnBabysittersSortedListener {
-            void onSorted(List<Babysitter> sortedBabysitters);
-
-            void onFailure(Exception exception);
+    private String getErrorMessage(Response<?> response) {
+        try {
+            return response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+        } catch (Exception e) {
+            return "Could not read error body";
         }
     }
+
+    private void logError(Response<?> response, String methodName) {
+        try {
+            Log.e("DataManager", "Error in " + methodName + ": " + response.errorBody().string() + " | HTTP Status Code: " + response.code());
+        } catch (Exception e) {
+            Log.e("DataManager", "Error in " + methodName + ": Could not read error body", e);
+        }
+    }
+
+    public interface OnLogoutListener {
+        void onLogoutSuccess();
+
+        void onLogoutFailure(Exception exception);
+    }
+
+    public interface OnUserCreationListener {
+        void onUserCreated(String email);
+
+        void onFailure(Exception exception);
+    }
+
+    public interface OnDataSavedListener {
+        void onSuccess();
+
+        void onFailure(Exception exception);
+    }
+
+    public interface OnUserUpdateListener {
+        void onSuccess();
+
+        void onFailure(Exception exception);
+    }
+
+    public interface OnLoginListener {
+        void onSuccess(User user);
+
+        void onFailure(Exception exception);
+    }
+
+    public interface OnBabysittersLoadedListener {
+        void onBabysittersLoaded(List<Babysitter> babysitters);
+
+        void onFailure(Exception exception);
+    }
+
+    public interface OnEventsLoadedListener {
+        void onEventsLoaded(List<BabysittingEvent> events);
+
+        void onFailure(Exception exception);
+    }
+
+    public interface OnBabysittersSortedListener {
+        void onSorted(List<Babysitter> sortedBabysitters);
+
+        void onFailure(Exception exception);
+    }
+
+    public interface OnParentLoadedListener {
+        void onParentLoaded(Parent parent);
+
+        void onFailure(Exception exception);
+    }
+}

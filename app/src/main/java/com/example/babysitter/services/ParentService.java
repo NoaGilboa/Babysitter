@@ -18,4 +18,6 @@ public interface ParentService {
                                                   @Query("superapp") String superapp,
                                                   @Query("email") String email);
 
+
+
 }

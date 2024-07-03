@@ -12,24 +12,24 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.babysitter.R;
 import com.example.babysitter.models.BabysittingEvent;
 import com.example.babysitter.models.Parent;
-import com.example.babysitter.R;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
+import com.example.babysitter.repositories.DataManager;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
 public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentViewHolder> {
     private List<BabysittingEvent> babysittingEvents;
     private Context context;
+    private DataManager dataManager;
 
-    public ParentAdapter(List<BabysittingEvent> babysittingEvents, Context context) {
+    public ParentAdapter(List<BabysittingEvent> babysittingEvents, Context context, DataManager dataManager) {
         this.babysittingEvents = babysittingEvents;
         this.context = context;
+        this.dataManager = dataManager;
     }
 
     @NonNull
@@ -44,13 +44,10 @@ public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentView
         BabysittingEvent babysittingEvent = babysittingEvents.get(position);
 
         if (babysittingEvent.getParentUid() != null && !babysittingEvent.getParentUid().isEmpty()) {
-            DatabaseReference parentRef = FirebaseDatabase.getInstance().getReference()
-                    .child("Users").child("Parent").child(babysittingEvent.getParentUid());
-            parentRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            dataManager.getParent(babysittingEvent.getParentUid(), new DataManager.OnParentLoadedListener() {
                 @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        Parent parent = dataSnapshot.getValue(Parent.class);
+                public void onParentLoaded(Parent parent) {
+                    if (parent != null) {
                         holder.tvParentName.setText("Parent Name: " + parent.getName());
                         holder.tvParentPhone.setText("Parent Phone: " + parent.getPhone());
                         holder.tvParentEmail.setText("Parent Email: " + parent.getMail());
@@ -63,8 +60,8 @@ public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentView
                 }
 
                 @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    Log.e("ParentAdapter", "Failed to load parent details", error.toException());
+                public void onFailure(Exception exception) {
+                    Log.e("ParentAdapter", "Failed to load parent details", exception);
                 }
             });
         } else {
@@ -72,7 +69,8 @@ public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentView
         }
     }
 
-    private void updateStatus(@NonNull ParentViewHolder holder, BabysittingEvent babysittingEvent) {
+    private void updateStatus(@NonNull ParentViewHolder holder, BabysittingEvent
+            babysittingEvent) {
         if (babysittingEvent.getStatus() != null) {
             holder.tvStatus.setTypeface(null, Typeface.BOLD);
             holder.tvStatus.setVisibility(View.VISIBLE);

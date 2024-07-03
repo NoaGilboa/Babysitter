@@ -1,9 +1,13 @@
 package com.example.babysitter.models;
 
+import androidx.annotation.NonNull;
+
 import com.example.babysitter.externalModels.utils.CreatedBy;
 import com.example.babysitter.externalModels.utils.Location;
 import com.example.babysitter.externalModels.boundaries.ObjectBoundary;
+import com.example.babysitter.externalModels.utils.ObjectId;
 import com.example.babysitter.externalModels.utils.UserId;
+import com.google.gson.Gson;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -89,7 +93,8 @@ public class BabysittingEvent {
 
     public ObjectBoundary toBoundary() {
         ObjectBoundary objectBoundary = new ObjectBoundary();
-        objectBoundary.setType(this.getClass().toString());
+        objectBoundary.setObjectId(new ObjectId());
+        objectBoundary.setType(this.getClass().getSimpleName());
         objectBoundary.setAlias(this.getBabysitterUid());
         objectBoundary.setLocation(new Location(0,0));
         objectBoundary.setActive(true);
@@ -105,5 +110,22 @@ public class BabysittingEvent {
         details.put("status", this.status);
         objectBoundary.setObjectDetails(details);
         return objectBoundary;
+    }
+    public BabysittingEvent toBabysittingEvent(String json){
+        BabysittingEvent babysittingEvent= new Gson().fromJson(json,BabysittingEvent.class);
+        return babysittingEvent;
+    }
+
+    @Override
+    public String toString() {
+        return "BabysittingEvent{" +
+                "messageId='" + messageId + '\'' +
+                ", messageText='" + messageText + '\'' +
+                ", selectedDate='" + selectedDate + '\'' +
+                ", parentUid='" + parentUid + '\'' +
+                ", babysitterUid='" + babysitterUid + '\'' +
+                ", status=" + status +
+                ", mailParent='" + mailParent + '\'' +
+                '}';
     }
 }

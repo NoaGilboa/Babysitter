@@ -39,7 +39,7 @@ public class ActivityHomeBabysitter extends AppCompatActivity {
         recyclerView = findViewById(R.id.rvParents);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         events = new ArrayList<>();
-        adapter = new ParentAdapter(events, this);
+        adapter = new ParentAdapter(events, this,dataManager);
         recyclerView.setAdapter(adapter);
 
         loadEvents();
