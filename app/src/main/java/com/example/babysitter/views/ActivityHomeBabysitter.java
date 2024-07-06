@@ -60,7 +60,7 @@ public class ActivityHomeBabysitter extends AppCompatActivity {
             });
         });
 
-        findViewById(R.id.btnSettings).setOnClickListener(v -> startActivity(new Intent(this, ActivitySetting.class)));
+        // findViewById(R.id.btnSettings).setOnClickListener(v -> startActivity(new Intent(this, ActivitySetting.class)));
 
         findViewById(R.id.btnSortByOldetoNewer).setOnClickListener(v -> sortEvents(true));
         findViewById(R.id.btnSortByNewerToOlder).setOnClickListener(v -> sortEvents(false));

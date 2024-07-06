@@ -63,27 +63,27 @@
             android:textColor="@color/pastel_coral"
             android:textStyle="bold" />
 
-        <RadioGroup
-            android:id="@+id/rgUserType"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="15dp"
-            android:orientation="horizontal">
+<!--        <RadioGroup-->
+<!--            android:id="@+id/rgUserType"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center_horizontal"-->
+<!--            android:layout_marginTop="15dp"-->
+<!--            android:orientation="horizontal">-->
 
-            <RadioButton
-                android:id="@+id/rbParent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="15dp"
-                android:text="Parent" />
+<!--            <RadioButton-->
+<!--                android:id="@+id/rbParent"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginEnd="15dp"-->
+<!--                android:text="Parent" />-->
 
-            <RadioButton
-                android:id="@+id/rbBabysitter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Babysitter" />
-        </RadioGroup>
+<!--            <RadioButton-->
+<!--                android:id="@+id/rbBabysitter"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="Babysitter" />-->
+<!--        </RadioGroup>-->
 
         <Button
             android:id="@+id/btnLogin"

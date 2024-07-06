@@ -20,4 +20,6 @@ public interface EventService {
 
     @POST("/superapp/objects")
     Call<ObjectBoundary> createEvent(@Body ObjectBoundary boundaryObject);
+
+
 }

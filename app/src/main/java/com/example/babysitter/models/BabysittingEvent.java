@@ -94,6 +94,7 @@ public class BabysittingEvent {
     public ObjectBoundary toBoundary() {
         ObjectBoundary objectBoundary = new ObjectBoundary();
         objectBoundary.setObjectId(new ObjectId());
+        objectBoundary.getObjectId().setId(this.messageId);
         objectBoundary.setType(this.getClass().getSimpleName());
         objectBoundary.setAlias(this.getBabysitterUid());
         objectBoundary.setLocation(new Location(0,0));

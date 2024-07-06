@@ -63,25 +63,25 @@ public class ActivityLogin extends AppCompatActivity {
             @Override
             public void onSuccess(User user) {
                 progressDialog.dismiss();
-                Toast.makeText(ActivityLogin.this, "Login successful", Toast.LENGTH_SHORT).show();
-                if (binding.rbBabysitter.isChecked()) {
+               // if (binding.rbBabysitter.isChecked()) {
                     if(user instanceof Babysitter){
+                        Toast.makeText(ActivityLogin.this, "Login successful", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(ActivityLogin.this, ActivityHomeBabysitter.class));
                     }
                     else {
                         Toast.makeText(ActivityLogin.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
                     }
-                } else if (binding.rbParent.isChecked()) {
-                    if(user instanceof Parent){
-                        startActivity(new Intent(ActivityLogin.this, ActivityHomeParent.class));
-                    }
-                    else {
-                        Toast.makeText(ActivityLogin.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
-                    }
-                }
-                else {
-                    Toast.makeText(ActivityLogin.this, "Must select a user type", Toast.LENGTH_SHORT).show();
-                }
+//                } else if (binding.rbParent.isChecked()) {
+//                    if(user instanceof Parent){
+//                        startActivity(new Intent(ActivityLogin.this, ActivityHomeParent.class));
+//                    }
+//                    else {
+//                        Toast.makeText(ActivityLogin.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//                else {
+//                    Toast.makeText(ActivityLogin.this, "Must select a user type", Toast.LENGTH_SHORT).show();
+//                }
                 finish();
             }
             @Override

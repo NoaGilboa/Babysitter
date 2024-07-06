@@ -56,12 +56,12 @@ public class ActivityHomeParent extends AppCompatActivity {
             });
         });
 
-        findViewById(R.id.btnSettings).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(ActivityHomeParent.this, ActivitySetting.class));
-            }
-        });
+//        findViewById(R.id.btnSettings).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                startActivity(new Intent(ActivityHomeParent.this, ActivitySetting.class));
+//            }
+//        });
 
         findViewById(R.id.btnSortByExperience).setOnClickListener(v -> {
             Collections.sort(babysitters, (b1, b2) -> Double.compare(b2.getExperience(), b1.getExperience()));

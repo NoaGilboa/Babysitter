@@ -24,25 +24,25 @@
             android:textSize="50sp"
             android:textStyle="bold" />
 
-        <RadioGroup
-            android:id="@+id/rgUserType"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
+<!--        <RadioGroup-->
+<!--            android:id="@+id/rgUserType"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="horizontal">-->
 
-            <RadioButton
-                android:id="@+id/rbBabysitter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Babysitter" />
+<!--            <RadioButton-->
+<!--                android:id="@+id/rbBabysitter"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="Babysitter" />-->
 
-            <RadioButton
-                android:id="@+id/rbParent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Parent" />
-        </RadioGroup>
+<!--            <RadioButton-->
+<!--                android:id="@+id/rbParent"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="Parent" />-->
+<!--        </RadioGroup>-->
 
         <!-- Shared fields -->
         <EditText
@@ -79,7 +79,7 @@
             android:layout_height="wrap_content"
             android:hint="Age"
             android:inputType="numberDecimal"
-            android:visibility="gone" />
+            android:visibility="visible" />
 
         <EditText
             android:id="@+id/etDateOfBirth"
@@ -94,7 +94,7 @@
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -154,13 +154,13 @@
             android:visibility="gone" />
 
         <!-- Parent exclusive fields -->
-        <EditText
-            android:id="@+id/etNumberOfChildren"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Number of Children"
-            android:inputType="numberDecimal"
-            android:visibility="gone" />
+<!--        <EditText-->
+<!--            android:id="@+id/etNumberOfChildren"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:hint="Number of Children"-->
+<!--            android:inputType="numberDecimal"-->
+<!--            android:visibility="gone" />-->
 
         <!-- Shared fields -->
         <EditText

@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+
 import com.example.babysitter.externalModels.boundaries.MiniAppCommandBoundary;
 import com.example.babysitter.externalModels.boundaries.NewUserBoundary;
 import com.example.babysitter.externalModels.boundaries.ObjectBoundary;
@@ -50,6 +51,7 @@ public class DataManager {
         this.eventService = database.getClient().create(EventService.class);
         this.userService = database.getClient().create(UserService.class);
     }
+
 
     public void logout(OnLogoutListener listener) {
         setCurrentUserEmail("");
@@ -131,7 +133,7 @@ public class DataManager {
     }
 
     private void updateObject(ObjectBoundary objectBoundary, OnUserUpdateListener listenerUpdate) {
-        userService.updateObject(objectBoundary.getObjectId().getId(), objectBoundary.getObjectId().getSuperapp(), objectBoundary.getObjectId().getSuperapp(), currentUserEmail, objectBoundary)
+        userService.updateObject(objectBoundary.getObjectId().getId(), objectBoundary.getObjectId().getSuperapp(), objectBoundary.getObjectId().getSuperapp(), objectBoundary.getCreatedBy().getUserId().getEmail(), objectBoundary)
                 .enqueue(new Callback<Void>() {
                     @Override
                     public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
@@ -181,8 +183,10 @@ public class DataManager {
                             Babysitter babysitter = new Gson().fromJson(new Gson().toJson(object.getObjectDetails()), Babysitter.class);
                             listener.onSuccess(babysitter);
                         } else if (object.getType().equals(Parent.class.getSimpleName())) {
-                            Parent parent = new Gson().fromJson(new Gson().toJson(object.getObjectDetails()), Parent.class);
-                            listener.onSuccess(parent);
+                            listener.onFailure(new Exception("User not found"));
+
+//                            Parent parent = new Gson().fromJson(new Gson().toJson(object.getObjectDetails()), Parent.class);
+//                            listener.onSuccess(parent);
                         }
                     } else {
                         listener.onFailure(new Exception("Incorrect password"));
@@ -352,6 +356,20 @@ public class DataManager {
                                     if (response.isSuccessful() && response.body() != null) {
                                         Log.d("DataManager", "Event saved successfully: " + response.body());
                                         listenerSave.onSuccess();
+                                        BabysittingEvent savedEvent = babysittingEvent.toBabysittingEvent(new Gson().toJson(response.body()));
+                                        updateEvent(response.body().getObjectId().getId(), savedEvent, new OnUserUpdateListener() {
+                                            @Override
+                                            public void onSuccess() {
+                                                Log.d("DataManager", "Message id updated successfully");
+
+                                            }
+
+                                            @Override
+                                            public void onFailure(Exception exception) {
+                                                Log.e("DataManager", "Failed to update Message: " + exception.getMessage());
+
+                                            }
+                                        });
                                         updateUserRole(currentUserEmail, Role.MINIAPP_USER, new OnUserUpdateListener() {
                                             @Override
                                             public void onSuccess() {
@@ -525,6 +543,7 @@ public class DataManager {
                             listener.onFailure(new Exception("Failed to fetch parent data"));
                         }
                     }
+
                     @Override
                     public void onFailure(Call<ObjectBoundary> call, Throwable t) {
                         listener.onFailure(new Exception("Failed to fetch parent data: " + t.getMessage()));
@@ -569,6 +588,49 @@ public class DataManager {
             Log.e("DataManager", "Error in " + methodName + ": Could not read error body", e);
         }
     }
+
+    public void updateEvent(String id, BabysittingEvent babysittingEvent, OnUserUpdateListener listenerUpdate) {
+        babysittingEvent.setMessageId(id);
+        ObjectBoundary objectBoundary = babysittingEvent.toBoundary();
+        objectBoundary.getObjectId().setSuperapp(superapp);
+
+        // Step 1: Update the user role to SUPERAPP_USER
+        updateUserRole(objectBoundary.getCreatedBy().getUserId().getEmail(), Role.SUPERAPP_USER, new OnUserUpdateListener() {
+            @Override
+            public void onSuccess() {
+                // Step 2: Update the event object
+                updateObject(objectBoundary, new OnUserUpdateListener() {
+                    @Override
+                    public void onSuccess() {
+                        // Step 3: Update the user role back to MINIAPP_USER
+                        updateUserRole(objectBoundary.getCreatedBy().getUserId().getEmail(), Role.MINIAPP_USER, new OnUserUpdateListener() {
+                            @Override
+                            public void onSuccess() {
+                                // Notify the original listener that the whole operation was successful
+                                listenerUpdate.onSuccess();
+                            }
+                            @Override
+                            public void onFailure(Exception exception) {
+                                // Notify the original listener about the failure in the final step
+                                listenerUpdate.onFailure(exception);
+                            }
+                        });
+                    }
+                    @Override
+                    public void onFailure(Exception exception) {
+                        // Notify the original listener about the failure in the event update step
+                        listenerUpdate.onFailure(exception);
+                    }
+                });
+            }
+            @Override
+            public void onFailure(Exception exception) {
+                // Notify the original listener about the failure in the initial user role update step
+                listenerUpdate.onFailure(exception);
+            }
+        });
+    }
+
 
     public interface OnLogoutListener {
         void onLogoutSuccess();

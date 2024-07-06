@@ -15,8 +15,8 @@ public interface ParentService {
 
     @GET("/superapp/objects/search/byType/{type}")
     Call<List<ObjectBoundary>> loadAllParents(@Path("type") String type,
-                                                  @Query("superapp") String superapp,
-                                                  @Query("email") String email);
+                                                  @Query("userSuperapp") String userSuperapp,
+                                                  @Query("userEmail") String userEmail);
 
 
 

@@ -72,17 +72,17 @@ public class ActivityRegister extends AppCompatActivity {
         tvAge = findViewById(R.id.tvAge);
         etMaritalStatus = findViewById(R.id.etMaritalStatus);
         etDescription = findViewById(R.id.etDescription);
-        etNumberOfChildren = findViewById(R.id.etNumberOfChildren);
+       // etNumberOfChildren = findViewById(R.id.etNumberOfChildren);
         etPassword = findViewById(R.id.etPassword);
         etHourlyWage = findViewById(R.id.etHourlyWage);
         etExperience = findViewById(R.id.etExperience);
 
-        rgUserType = findViewById(R.id.rgUserType);
+       // rgUserType = findViewById(R.id.rgUserType);
         rgSmoke = findViewById(R.id.rgSmoke);
         smokingLayout = findViewById(R.id.smokingLayout);
 
-        rbBabysitter = findViewById(R.id.rbBabysitter);
-        rbParent = findViewById(R.id.rbParent);
+        //rbBabysitter = findViewById(R.id.rbBabysitter);
+        //rbParent = findViewById(R.id.rbParent);
         rbSmokeYes = findViewById(R.id.rbSmokeYes);
         rbSmokeNo = findViewById(R.id.rbSmokeNo);
 
@@ -91,13 +91,13 @@ public class ActivityRegister extends AppCompatActivity {
     }
 
     private void setupUIListeners() {
-        rgUserType.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.rbBabysitter) {
-                showBabysitterFields();
-            } else if (checkedId == R.id.rbParent) {
-                showParentFields();
-            }
-        });
+//        rgUserType.setOnCheckedChangeListener((group, checkedId) -> {
+//            if (checkedId == R.id.rbBabysitter) {
+        showBabysitterFields();
+//            } else if (checkedId == R.id.rbParent) {
+//                showParentFields();
+//            }
+//        });
 
 
         btnRegister.setOnClickListener(v -> registerUser());
@@ -172,7 +172,7 @@ public class ActivityRegister extends AppCompatActivity {
 
                 progressDialog = ProgressDialog.show(this, "Registering", "Please wait...", true);
                 User user = null;
-                if (rbBabysitter.isChecked()) {
+                //if (rbBabysitter.isChecked()) {
                     String dateOfBirth = etDateOfBirth.getText().toString().trim();
                     Babysitter babysitter = new Babysitter(uid, name, phone, email, address, password,
                             dateOfBirth,
@@ -182,14 +182,14 @@ public class ActivityRegister extends AppCompatActivity {
                             Double.parseDouble(etHourlyWage.getText().toString().trim()),
                             Double.parseDouble(etExperience.getText().toString().trim()),
                             latitude, longitude);
-                    //tvAge.setText(babysitter.getAge());
+                   // tvAge.setText(babysitter.getAge());
                     user = babysitter;
-                } else if (rbParent.isChecked()) {
-                    Parent parent = new Parent(uid, name, phone, email, address, password,
-                            Integer.parseInt(etNumberOfChildren.getText().toString().trim()),
-                            latitude, longitude);
-                    user = parent;
-                }
+//                } else if (rbParent.isChecked()) {
+//                    Parent parent = new Parent(uid, name, phone, email, address, password,
+//                            Integer.parseInt(etNumberOfChildren.getText().toString().trim()),
+//                            latitude, longitude);
+//                    user = parent;
+//                }
                 if (user != null) {
                     dataManager.createUser(email, user, new DataManager.OnUserCreationListener() {
                         @Override
@@ -245,7 +245,7 @@ public class ActivityRegister extends AppCompatActivity {
             etHourlyWage.setVisibility(View.VISIBLE);
             etExperience.setVisibility(View.VISIBLE);
 
-            etNumberOfChildren.setVisibility(View.GONE);
+           // etNumberOfChildren.setVisibility(View.GONE);
         }
 
         private void showParentFields () {

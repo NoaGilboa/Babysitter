@@ -90,7 +90,7 @@ public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentView
                 holder.tvStatus.setVisibility(View.VISIBLE);
                 holder.BtnApprov.setVisibility(View.GONE);
                 holder.BtnCancel.setVisibility(View.VISIBLE);
-                updateEventInFirebase(babysittingEvent, position);
+                updateEventInDataBase(babysittingEvent, position);
             }
         });
 
@@ -102,24 +102,27 @@ public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentView
                 holder.tvStatus.setVisibility(View.VISIBLE);
                 holder.BtnCancel.setVisibility(View.GONE);
                 holder.BtnApprov.setVisibility(View.VISIBLE);
-                updateEventInFirebase(babysittingEvent, position);
+                updateEventInDataBase(babysittingEvent, position);
             }
         });
 
     }
 
-    private void updateEventInFirebase(BabysittingEvent babysittingEvent, int position) {
-        DatabaseReference eventRef = FirebaseDatabase.getInstance().getReference("Messages")
-                .child(babysittingEvents.get(position).getMessageId());
-
-        eventRef.setValue(babysittingEvent).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
+    private void updateEventInDataBase(BabysittingEvent babysittingEvent, int position) {
+        dataManager.updateEvent(babysittingEvent.getMessageId(), babysittingEvent, new DataManager.OnUserUpdateListener() {
+            @Override
+            public void onSuccess() {
                 Log.d("ParentAdapter", "Event status updated successfully");
                 notifyItemChanged(position);
-            } else {
-                Log.e("ParentAdapter", "Failed to update event status", task.getException());
+            }
+
+            @Override
+            public void onFailure(Exception exception) {
+                Log.e("ParentAdapter", "Failed to update event status", exception);
+
             }
         });
+
     }
 
     @Override
