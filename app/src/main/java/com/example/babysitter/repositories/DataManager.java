@@ -428,7 +428,7 @@ public class DataManager {
         return babysittingEvent;
     }
 
-    public void loadAllEvents(OnEventsLoadedListener listener) {
+    public void loadAllEvents(int page, int size, OnEventsLoadedListener listener) {
         updateUserRole(currentUserEmail, Role.MINIAPP_USER, new OnUserUpdateListener() {
             @Override
             public void onSuccess() {
@@ -441,7 +441,9 @@ public class DataManager {
                                     MiniAppCommandBoundary command = createCommand(
                                             "GetAllObjectsByTypeAndAliasAndActive", response.body(),
                                             "type", BabysittingEvent.class.getSimpleName(),
-                                            "alias", response.body().getUsername());
+                                            "alias", response.body().getUsername(),
+                                            "page", String.valueOf(page),
+                                            "size", String.valueOf(size));
 
                                     eventService.loadAllBabysittingEvents(BabysittingEvent.class.getSimpleName(), command)
                                             .enqueue(new Callback<List<Object>>() {
