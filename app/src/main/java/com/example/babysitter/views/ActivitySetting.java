@@ -188,8 +188,10 @@ public class ActivitySetting extends AppCompatActivity {
     private void navigateToHome() {
         if (binding.tvAge.getVisibility() == View.VISIBLE) {
             startActivity(new Intent(ActivitySetting.this, ActivityHomeBabysitter.class));
+            finish();
         } else {
             startActivity(new Intent(ActivitySetting.this, ActivityHomeParent.class));
+            finish();
         }
     }
 

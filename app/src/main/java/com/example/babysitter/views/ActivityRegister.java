@@ -102,7 +102,10 @@ public class ActivityRegister extends AppCompatActivity {
 
         btnRegister.setOnClickListener(v -> registerUser());
 
-        alreadyAccount.setOnClickListener(v -> startActivity(new Intent(ActivityRegister.this, ActivityLogin.class)));
+        alreadyAccount.setOnClickListener(v -> {
+            startActivity(new Intent(ActivityRegister.this, ActivityLogin.class));
+            finish();
+        });
 
         etAddress.setOnClickListener(v -> {
             GPSTracker gpsTracker = new GPSTracker(ActivityRegister.this);
@@ -196,6 +199,7 @@ public class ActivityRegister extends AppCompatActivity {
                         public void onUserCreated(String email) {
                             Toast.makeText(ActivityRegister.this, "Registration successful", Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(ActivityRegister.this, ActivityLogin.class));
+                            finish();
                         }
 
                         @Override

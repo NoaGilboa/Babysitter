@@ -41,7 +41,10 @@ public class ActivityLogin extends AppCompatActivity {
         progressDialog.setTitle("Login");
         progressDialog.setMessage("Please Wait...");
 
-        binding.alreadyAccount.setOnClickListener(v -> startActivity(new Intent(ActivityLogin.this, ActivityRegister.class)));
+        binding.alreadyAccount.setOnClickListener(v -> {
+                startActivity(new Intent(ActivityLogin.this, ActivityRegister.class));
+                finish();
+                });
 
         binding.btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,6 +70,7 @@ public class ActivityLogin extends AppCompatActivity {
                     if(user instanceof Babysitter){
                         Toast.makeText(ActivityLogin.this, "Login successful", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(ActivityLogin.this, ActivityHomeBabysitter.class));
+                        finish();
                     }
                     else {
                         Toast.makeText(ActivityLogin.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
