@@ -222,7 +222,6 @@ public class ActivityRegister extends AppCompatActivity {
                     }, new DataManager.OnUserUpdateListener() {
                         @Override
                         public void onSuccess() {
-                            progressDialog.dismiss();
                             Toast.makeText(ActivityRegister.this, "Data updated successfully", Toast.LENGTH_SHORT).show();
                         }
 

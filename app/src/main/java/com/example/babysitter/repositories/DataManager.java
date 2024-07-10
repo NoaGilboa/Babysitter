@@ -98,8 +98,11 @@ public class DataManager {
                     userBoundary.setUsername(response.body().getObjectId().getId());
                     userBoundary.setRole(Role.MINIAPP_USER);
                     userData.getObjectDetails().put("uid", response.body().getObjectId().getId());
-                    new Handler().postDelayed(() -> updateUser(userBoundary, listenerUpdate), 10000);
-                    new Handler().postDelayed(() -> updateObject(userData, listenerUpdate), 10000);
+                    userData.getObjectId().setSuperapp(response.body().getObjectId().getSuperapp());
+                    userData.getObjectId().setId(response.body().getObjectId().getId());
+                    Log.d("DataManager", "UserData: " + userData);
+                    updateObject(userData, listenerUpdate);
+                    updateUser(userBoundary, listenerUpdate);
                 } else {
                     logError(response, "saveUserData");
                     listenerSave.onFailure(new Exception("Failed to save user data"));

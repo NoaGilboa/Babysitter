@@ -3,6 +3,7 @@ package com.example.babysitter.models;
 import com.example.babysitter.externalModels.utils.CreatedBy;
 import com.example.babysitter.externalModels.utils.Location;
 import com.example.babysitter.externalModels.boundaries.ObjectBoundary;
+import com.example.babysitter.externalModels.utils.ObjectId;
 import com.example.babysitter.externalModels.utils.UserId;
 import com.google.gson.Gson;
 
@@ -104,6 +105,7 @@ public class Babysitter extends User {
         objectBoundary.setAlias(this.getPassword());
         objectBoundary.setLocation(new Location(this.getLatitude(),this.getLongitude()));
         objectBoundary.setActive(true);
+        objectBoundary.setObjectId(new ObjectId());
         CreatedBy user=new CreatedBy();
         user.setUserId((new UserId()).setEmail(this.getMail()));
         objectBoundary.setCreatedBy(user);
