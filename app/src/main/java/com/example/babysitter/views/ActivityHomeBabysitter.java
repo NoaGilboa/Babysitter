@@ -11,9 +11,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.babysitter.R;
 import com.example.babysitter.adapters.ParentAdapter;
 import com.example.babysitter.models.BabysittingEvent;
-import com.example.babysitter.R;
 import com.example.babysitter.repositories.DataManager;
 
 import java.text.ParseException;
@@ -44,7 +44,7 @@ public class ActivityHomeBabysitter extends AppCompatActivity {
         recyclerView = findViewById(R.id.rvParents);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         events = new ArrayList<>();
-        adapter = new ParentAdapter(events, this,dataManager);
+        adapter = new ParentAdapter(events, this, dataManager);
         recyclerView.setAdapter(adapter);
         btnNextPage = findViewById(R.id.btnNextPage);
         btnPreviousPage = findViewById(R.id.btnPreviousPage);
@@ -72,6 +72,7 @@ public class ActivityHomeBabysitter extends AppCompatActivity {
                     startActivity(intent);
                     finish();
                 }
+
                 @Override
                 public void onLogoutFailure(Exception exception) {
                     Toast.makeText(ActivityHomeBabysitter.this, "Logout failed: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
@@ -86,26 +87,26 @@ public class ActivityHomeBabysitter extends AppCompatActivity {
     }
 
     private void loadEvents(int currentPage, int pageSize) {
-            dataManager.loadAllEvents(currentPage, pageSize, new DataManager.OnEventsLoadedListener() {
-                @Override
-                public void onEventsLoaded(List<BabysittingEvent> loadedEvents) {
-                    events.clear();
-                    events.addAll(loadedEvents);
-                    adapter.notifyDataSetChanged();
-                    updatePaginationButtons();
-                }
+        dataManager.loadAllEvents(currentPage, pageSize, new DataManager.OnEventsLoadedListener() {
+            @Override
+            public void onEventsLoaded(List<BabysittingEvent> loadedEvents) {
+                events.clear();
+                events.addAll(loadedEvents);
+                adapter.notifyDataSetChanged();
+                updatePaginationButtons();
+            }
 
-                @Override
-                public void onFailure(Exception exception) {
-                    Log.e("HomeBabysitter", "Failed to load events: " + exception.getMessage());
-                }
-            });
+            @Override
+            public void onFailure(Exception exception) {
+                Log.e("HomeBabysitter", "Failed to load events: " + exception.getMessage());
+            }
+        });
 
     }
 
     private void sortEvents(boolean olderToNewer) {
         if (events != null && !events.isEmpty()) {
-            Collections.sort(events, (event1, event2) -> {
+           Collections.sort(events, (event1, event2) -> {
                 return compareDates(event1.getSelectedDate(), event2.getSelectedDate(), olderToNewer);
             });
             adapter.notifyDataSetChanged();
@@ -127,9 +128,12 @@ public class ActivityHomeBabysitter extends AppCompatActivity {
     }
 
     private void updatePaginationButtons() {
-        if (currentPage == 0) {
+        if (currentPage == 0 && events.size() >= pageSize) {
             btnPreviousPage.setVisibility(View.GONE);
             btnNextPage.setVisibility(View.VISIBLE);
+        } else if (currentPage == 0 && events.size() < pageSize) {
+            btnNextPage.setVisibility(View.GONE);
+            btnPreviousPage.setVisibility(View.GONE);
         } else if (events.size() < pageSize) {
             btnNextPage.setVisibility(View.GONE);
             btnPreviousPage.setVisibility(View.VISIBLE);

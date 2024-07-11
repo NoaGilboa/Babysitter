@@ -42,7 +42,7 @@ public class Parent extends User {
         objectBoundary.setCreatedBy(user);
         Map<String, Object> details = new HashMap<>();
         details.put("numberOfChildren", this.numberOfChildren);
-        details.put("maritalStatus", this.maritalStatus);
+        // details.put("maritalStatus", this.maritalStatus);
         details.put("name", this.getName());
         details.put("phone", this.getPhone());
         details.put("uid", this.getUid());

@@ -41,7 +41,7 @@ public class DataManager {
     private final ParentService parentService;
     private final EventService eventService;
     private final UserService userService;
-    private final String superapp = "2024b.yarden.cherry";
+    private String superapp = "";
     private static String currentUserEmail = "";
 
     public DataManager() {
@@ -162,6 +162,7 @@ public class DataManager {
             public void onResponse(Call<UserBoundary> call, Response<UserBoundary> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     UserBoundary user = response.body();
+                    setSuperapp(user.getUserId().getSuperapp());
                     fetchUserPassword(user, password, listener);
                 } else {
                     listener.onFailure(new Exception("User not found"));
@@ -173,6 +174,10 @@ public class DataManager {
                 listener.onFailure(new Exception("Network error during user fetch: " + t.getMessage()));
             }
         });
+    }
+
+    private void setSuperapp(String superapp) {
+        this.superapp = superapp;
     }
 
     private void fetchUserPassword(UserBoundary user, String password, OnLoginListener listener) {
@@ -485,6 +490,61 @@ public class DataManager {
             }
         });
     }
+
+    public void loadAllEventsSorted(String sort, int page, int size, OnEventsLoadedListener listener) {
+        updateUserRole(currentUserEmail, Role.MINIAPP_USER, new OnUserUpdateListener() {
+            @Override
+            public void onSuccess() {
+                userService.getUserById(superapp, currentUserEmail).
+                        enqueue(new Callback<UserBoundary>() {
+                            @Override
+                            public void onResponse
+                                    (Call<UserBoundary> call, Response<UserBoundary> response) {
+                                if (response.isSuccessful() && response.body() != null) {
+                                    MiniAppCommandBoundary command = createCommand(
+                                            "GetAllObjectsByTypeAndAliasAndActiveSorted", response.body(),
+                                            "type", BabysittingEvent.class.getSimpleName(),
+                                            "alias", response.body().getUsername(),
+                                            "sort", sort,
+                                            "page", String.valueOf(page),
+                                            "size", String.valueOf(size));
+
+                                    eventService.loadAllBabysittingEvents(BabysittingEvent.class.getSimpleName(), command)
+                                            .enqueue(new Callback<List<Object>>() {
+                                                @Override
+                                                public void onResponse(Call<List<Object>> call, Response<List<Object>> response) {
+                                                    if (response.isSuccessful() && response.body() != null) {
+                                                        List<BabysittingEvent> events = convertObjectsToEvents(response.body());
+                                                        listener.onEventsLoaded(events);
+                                                    } else {
+                                                        listener.onFailure(new Exception("Failed to load messages"));
+                                                    }
+                                                }
+
+                                                @Override
+                                                public void onFailure(Call<List<Object>> call, Throwable t) {
+                                                    listener.onFailure(new Exception("Failed to load messages: " + t.getMessage()));
+                                                }
+                                            });
+
+                                } else {
+                                    logError(response, "createEvent");
+                                    listener.onFailure(new Exception("Failed to save event data"));
+                                }
+                            }
+                            @Override
+                            public void onFailure(Call<UserBoundary> call, Throwable t) {
+                                listener.onFailure(new Exception("Network error during parent ID fetch: " + t.getMessage()));
+                            }
+                        });
+            }
+            @Override
+            public void onFailure(Exception exception) {
+                Log.e("DataManager", "Failed to update user role to SUPERAPP_USER: " + exception.getMessage());
+            }
+        });
+    }
+
 
     private List<BabysittingEvent> convertObjectsToEvents(List<Object> objects) {
         List<BabysittingEvent> events = new ArrayList<>();

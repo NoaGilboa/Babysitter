@@ -13,6 +13,7 @@ public class RetrofitClient {
     // private static final String BASE_URL = "http://192.168.1.84:8084";  //device at home
     private static final String BASE_URL = "http://172.20.10.3:8084";  //device at Afeka
     //private static final String BASE_URL = "http://192.168.1.65:8084";  //device
+    //private static final String BASE_URL = "http://192.168.63.230:8084";  //device
 
     private static RetrofitClient instance;
     private Retrofit retrofit;
