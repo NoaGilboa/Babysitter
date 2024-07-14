@@ -16,8 +16,6 @@ import com.example.babysitter.R;
 import com.example.babysitter.models.BabysittingEvent;
 import com.example.babysitter.models.Parent;
 import com.example.babysitter.repositories.DataManager;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
 
@@ -69,19 +67,25 @@ public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentView
         }
     }
 
-    private void updateStatus(@NonNull ParentViewHolder holder, BabysittingEvent
-            babysittingEvent) {
+    private void updateStatus(@NonNull ParentViewHolder holder, BabysittingEvent babysittingEvent) {
         if (babysittingEvent.getStatus() != null) {
             holder.tvStatus.setTypeface(null, Typeface.BOLD);
             holder.tvStatus.setVisibility(View.VISIBLE);
             if (babysittingEvent.getStatus()) {
                 holder.tvStatus.setText("Approved");
                 holder.BtnApprov.setVisibility(View.GONE);
+                holder.BtnCancel.setVisibility(View.VISIBLE);
             } else {
                 holder.tvStatus.setText("Canceled");
                 holder.BtnCancel.setVisibility(View.GONE);
+                holder.BtnApprov.setVisibility(View.VISIBLE);
             }
+        } else {
+            holder.tvStatus.setVisibility(View.GONE);
+            holder.BtnApprov.setVisibility(View.VISIBLE);
+            holder.BtnCancel.setVisibility(View.GONE);
         }
+
         holder.BtnApprov.setOnClickListener(v -> {
             int position = holder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
@@ -105,7 +109,6 @@ public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentView
                 updateEventInDataBase(babysittingEvent, position);
             }
         });
-
     }
 
     private void updateEventInDataBase(BabysittingEvent babysittingEvent, int position) {
@@ -119,10 +122,8 @@ public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentView
             @Override
             public void onFailure(Exception exception) {
                 Log.e("ParentAdapter", "Failed to update event status", exception);
-
             }
         });
-
     }
 
     @Override

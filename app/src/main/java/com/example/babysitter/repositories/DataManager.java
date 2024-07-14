@@ -41,7 +41,7 @@ public class DataManager {
     private final ParentService parentService;
     private final EventService eventService;
     private final UserService userService;
-    private String superapp = "";
+    private String superapp = "2024b.yarden.cherry";
     private static String currentUserEmail = "";
 
     public DataManager() {
