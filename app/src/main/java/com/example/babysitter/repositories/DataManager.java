@@ -658,6 +658,7 @@ public class DataManager {
         babysittingEvent.setMessageId(id);
         ObjectBoundary objectBoundary = babysittingEvent.toBoundary();
         objectBoundary.getObjectId().setSuperapp(superapp);
+        objectBoundary.getCreatedBy().getUserId().setEmail(currentUserEmail);
 
         // Step 1: Update the user role to SUPERAPP_USER
         updateUserRole(objectBoundary.getCreatedBy().getUserId().getEmail(), Role.SUPERAPP_USER, new OnUserUpdateListener() {

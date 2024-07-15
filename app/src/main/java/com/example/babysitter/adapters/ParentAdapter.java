@@ -112,6 +112,7 @@ public class ParentAdapter extends RecyclerView.Adapter<ParentAdapter.ParentView
     }
 
     private void updateEventInDataBase(BabysittingEvent babysittingEvent, int position) {
+        Log.d("ParentAdapter", "Updating event status in database"+babysittingEvent.toString());
         dataManager.updateEvent(babysittingEvent.getMessageId(), babysittingEvent, new DataManager.OnUserUpdateListener() {
             @Override
             public void onSuccess() {
