@@ -115,20 +115,16 @@ The app requires the following permissions, as specified in the `AndroidManifest
 ## Screenshots
 
 Here are some screenshots and mockups of the application:
+![WhatsApp Image 2024-07-16 at 01 55 24_0e0ee1ed](https://github.com/user-attachments/assets/e57a0564-0f80-4c5e-b500-6c9a138b7079)
 
-![Mockup 1](https://github.com/NoaGilboa/Babysitter1/assets/143444119/63d8b860-8fae-44d5-9f82-d12658c44656)
-![Mockup 2](https://github.com/NoaGilboa/Babysitter1/assets/143444119/3defa6c2-09f0-46cc-bdb7-c4942fac862d)
-![Mockup 3](https://github.com/NoaGilboa/Babysitter1/assets/143444119/f8398cd4-b8bf-4770-99d6-575136cb3555)
-![Mockup 4](https://github.com/NoaGilboa/Babysitter1/assets/143444119/2bc31e99-5eb2-4540-a4ce-cdfd86215e19)
-![Mockup 5](https://github.com/NoaGilboa/Babysitter1/assets/143444119/5d82da94-307b-4f27-98ad-4a3b30358abd)
-![Mockup 6](https://github.com/NoaGilboa/Babysitter1/assets/143444119/3ae54dd9-4746-4e5e-bbf5-6b783fdab7ee)
-![Mockup 7](https://github.com/NoaGilboa/Babysitter1/assets/143444119/02b6dc8a-bd07-43d2-8997-2b12cea7854f)
+![WhatsApp Image 2024-07-16 at 01 56 05_b286a038](https://github.com/user-attachments/assets/25d1d49c-7def-407e-b4a4-e8a17a624993)
+
+![WhatsApp Image 2024-07-16 at 01 55 51_56e47054](https://github.com/user-attachments/assets/35ffc367-dc05-4f9a-91e3-35d74c161941)
 
 ## Video Demonstration
 
 Watch a video demonstration of the Babysitter app:
 
-[![Watch the video](https://github.com/NoaGilboa/Babysitter1/assets/143444119/f4b01abc-a3ae-4e6d-af1d-ff4e4f75433f)](https://github.com/NoaGilboa/Babysitter1/assets/143444119/f4b01abc-a3ae-4e6d-af1d-ff4e4f75433f)
+https://github.com/user-attachments/assets/c49040e7-6e0b-4dd6-a3bd-b8d97d325eb6
 
----
 
