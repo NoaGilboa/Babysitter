@@ -111,15 +111,15 @@ The app requires the following permissions, as specified in the `AndroidManifest
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 ```
-
 ## Screenshots
 
 Here are some screenshots and mockups of the application:
-![WhatsApp Image 2024-07-16 at 01 55 24_0e0ee1ed](https://github.com/user-attachments/assets/e57a0564-0f80-4c5e-b500-6c9a138b7079)
 
-![WhatsApp Image 2024-07-16 at 01 56 05_b286a038](https://github.com/user-attachments/assets/25d1d49c-7def-407e-b4a4-e8a17a624993)
+<img src="https://github.com/user-attachments/assets/e57a0564-0f80-4c5e-b500-6c9a138b7079" alt="WhatsApp Image 2024-07-16 at 01 55 24_0e0ee1ed" width="300" height="500">
 
-![WhatsApp Image 2024-07-16 at 01 55 51_56e47054](https://github.com/user-attachments/assets/35ffc367-dc05-4f9a-91e3-35d74c161941)
+<img src="https://github.com/user-attachments/assets/25d1d49c-7def-407e-b4a4-e8a17a624993" alt="WhatsApp Image 2024-07-16 at 01 56 05_b286a038" width="300" height="500">
+
+<img src="https://github.com/user-attachments/assets/35ffc367-dc05-4f9a-91e3-35d74c161941" alt="WhatsApp Image 2024-07-16 at 01 55 51_56e47054" width="300" height="500">
 
 ## Video Demonstration
 
